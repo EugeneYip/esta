@@ -1,607 +1,714 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
-/* ═══ SHARED UI ═══ */
-const tabs = ["Overview","Five Levels","SPARK & Position","Industry","Meso/Cluster","Macro & Meta","Q2: VRIO/ARK","Q3: ETA/Swatch","Cram Sheet"];
-
-const SectionTitle = ({ children, cn }) => (<div className="mb-4"><h2 className="text-xl font-bold text-slate-800 border-b-2 border-blue-600 pb-2">{children}</h2>{cn && <p className="text-sm text-slate-500 mt-1">{cn}</p>}</div>);
-
-const Card = ({ title, cn, children, color = "blue" }) => {
-  const colors = { blue:"border-blue-500 bg-blue-50", green:"border-green-500 bg-green-50", amber:"border-amber-500 bg-amber-50", red:"border-red-500 bg-red-50", purple:"border-purple-500 bg-purple-50", slate:"border-slate-400 bg-slate-50", rose:"border-rose-500 bg-rose-50", cyan:"border-cyan-500 bg-cyan-50" };
-  return (<div className={`border-l-4 ${colors[color]} p-4 rounded-r-lg mb-4`}>{title && <div className="font-bold text-slate-800 mb-1">{title}</div>}{cn && <div className="text-xs text-slate-500 mb-2">{cn}</div>}<div className="text-sm text-slate-700">{children}</div></div>);
+const theme = {
+  bg: "#FCFAF2",
+  card: "#FFFDF8",
+  line: "#DDD3C5",
+  ink: "#2C2926",
+  muted: "#6D645C",
+  deep: "#6A4B3C",
+  warm: "#F4ECE2",
+  green: "#65724D",
+  red: "#B85C4D",
+  amber: "#A97831",
+  softGreen: "#EEF2E5",
+  softRed: "#FAECE9",
+  softAmber: "#F8F0E4",
 };
 
-const Tag = ({ children, color = "blue" }) => {
-  const c = { blue:"bg-blue-100 text-blue-800", green:"bg-green-100 text-green-800", amber:"bg-amber-100 text-amber-800", red:"bg-red-100 text-red-800", purple:"bg-purple-100 text-purple-800", slate:"bg-slate-200 text-slate-700", rose:"bg-rose-100 text-rose-800", cyan:"bg-cyan-100 text-cyan-800" };
-  return <span className={`${c[color]} text-xs font-semibold px-2 py-0.5 rounded-full`}>{children}</span>;
-};
+const sections = [
+  { id: "overview", zh: "總覽", en: "Overview" },
+  { id: "eligibility", zh: "適用判斷", en: "Eligibility" },
+  { id: "prepare", zh: "申請前準備", en: "Before You Start" },
+  { id: "flow", zh: "流程圖", en: "Flow" },
+  { id: "fields", zh: "逐欄對照", en: "Field Guide" },
+  { id: "status", zh: "結果與後續", en: "Status" },
+  { id: "update", zh: "更新或重辦", en: "Update" },
+  { id: "mistakes", zh: "常見錯誤", en: "Mistakes" },
+  { id: "links", zh: "官方連結", en: "Links" },
+];
 
-const Arrow = () => <span className="text-slate-400 text-lg mx-1">→</span>;
+const keyCards = [
+  {
+    tone: "green",
+    zhTitle: "適用情境",
+    enTitle: "Best Fit",
+    zh: "中華民國電子護照，赴美觀光、商務、過境，單次停留不超過 90 天。",
+    en: "ROC e-passport holders traveling for tourism, business, or transit, with each stay capped at 90 days.",
+  },
+  {
+    tone: "red",
+    zhTitle: "不適用情境",
+    enTitle: "Not for ESTA",
+    zh: "工作、正式修課讀書、長期停留、移民，或其他超出 VWP 範圍的目的。",
+    en: "Not for work, for-credit study, long stays, immigration, or other purposes outside the VWP.",
+  },
+  {
+    tone: "amber",
+    zhTitle: "高風險限制",
+    enTitle: "High-Risk Restrictions",
+    zh: "若有特定國家旅行史、停留史，或兼具特定國籍，通常要改走簽證流程。",
+    en: "Certain travel histories, presence histories, or dual nationalities usually push you into the visa track.",
+  },
+  {
+    tone: "amber",
+    zhTitle: "重要原則",
+    enTitle: "Critical Rule",
+    zh: "ESTA 核准不等於保證入境。最終仍由口岸 CBP 官員決定。",
+    en: "ESTA approval does not guarantee admission. Final entry is decided by the CBP officer at the port of entry.",
+  },
+];
 
-/* ═══ INTERACTIVE FRAMEWORK COMPONENTS ═══ */
-const PC = { macro:{main:"#2563eb",light:"#eff6ff",dark:"#1d4ed8"}, supra:{main:"#7c3aed",light:"#f5f3ff",dark:"#6d28d9"}, meso:{main:"#059669",light:"#ecfdf5",dark:"#047857"}, industry:{main:"#d97706",light:"#fffbeb",dark:"#b45309"}, firm:{main:"#dc2626",light:"#fef2f2",mid:"#fecaca",dark:"#b91c1c"} };
+const restrictions = [
+  {
+    zh: "2011 年 3 月 1 日後曾前往或停留伊朗、伊拉克、北韓、利比亞、索馬利亞、蘇丹、敘利亞、葉門。",
+    en: "Traveled to or was present in Iran, Iraq, North Korea, Libya, Somalia, Sudan, Syria, or Yemen on or after March 1, 2011.",
+  },
+  {
+    zh: "2021 年 1 月 12 日後曾前往或停留古巴。",
+    en: "Traveled to or was present in Cuba on or after January 12, 2021.",
+  },
+  {
+    zh: "同時具有古巴、北韓、伊朗、伊拉克、蘇丹、敘利亞國籍。",
+    en: "Also a national of Cuba, North Korea, Iran, Iraq, Sudan, or Syria.",
+  },
+  {
+    zh: "若曾遭簽證拒發或資格有灰色地帶，直接評估簽證通常比盲目重送 ESTA 更穩。",
+    en: "If you have prior visa refusals or a borderline eligibility profile, assessing the visa route is usually safer than repeatedly re-submitting ESTA.",
+  },
+];
 
-function Num({ n, color }) {
-  return <span style={{ display:"inline-flex",alignItems:"center",justifyContent:"center",width:22,height:22,borderRadius:"50%",fontSize:11,fontWeight:700,background:color,color:"#fff",marginRight:8,flexShrink:0 }}>{n}</span>;
+const prepItems = [
+  { zh: "中華民國電子護照正本", en: "Your ROC e-passport" },
+  { zh: "護照號碼、英文姓名、發照日、到期日", en: "Passport number, legal English name, issue date, expiration date" },
+  { zh: "國民身分證統一編號", en: "Your National ID number" },
+  { zh: "可即時收信的 Email", en: "An email address you can actually access" },
+  { zh: "住家地址與電話", en: "Home address and phone" },
+  { zh: "緊急聯絡人姓名、電話、Email", en: "Emergency contact details" },
+  { zh: "在美聯絡人或第一晚住宿地址", en: "U.S. point of contact or first-night stay" },
+  { zh: "雇主或學校資訊", en: "Employer or school information, if applicable" },
+  { zh: "付款工具", en: "Payment method" },
+  { zh: "近期清楚正面人像照，若流程要求影像驗證可直接使用", en: "A recent, clear, front-facing photo in case the flow requests image verification" },
+];
+
+const quickFacts = [
+  { zhLabel: "官方費用", zhValue: "US$40.27", enLabel: "Official fee", enValue: "US$40.27", tone: "amber" },
+  { zhLabel: "平均填寫時間", zhValue: "約 23 分鐘", enLabel: "Estimated completion time", enValue: "About 23 minutes", tone: "default" },
+  { zhLabel: "建議申請時點", zhValue: "訂旅程時就申請，最晚不晚於登機前 72 小時", enLabel: "When to apply", enValue: "Apply when travel is booked and no later than 72 hours before boarding", tone: "default" },
+  { zhLabel: "有效期", zhValue: "通常 2 年，或到護照到期為止，以較早者為準", enLabel: "Validity", enValue: "Usually 2 years, or until passport expiry, whichever comes first", tone: "green" },
+];
+
+const screenFlow = [
+  {
+    step: "01",
+    zh: "選申請路徑",
+    en: "Choose the application path",
+    noteZh: "第一次申請通常是 Create New Application → Individual Application。多人一起辦改走網站上的 Group of Applications。",
+    noteEn: "Most first-time applicants use Create New Application → Individual Application. Group filings are better handled on the website.",
+  },
+  {
+    step: "02",
+    zh: "驗證 Email",
+    en: "Verify your email",
+    noteZh: "務必用你真的收得到信的信箱。驗證碼沒看到，先查垃圾郵件匣。",
+    noteEn: "Use an email account you can actually access. Check spam first if the code does not arrive.",
+  },
+  {
+    step: "03",
+    zh: "掃描護照與可能的影像驗證",
+    en: "Scan the passport and complete any image check",
+    noteZh: "系統若自動帶入資料，不可直接相信 OCR。護照號碼、姓名、生日、發照日、到期日都要重查。",
+    noteEn: "Never trust OCR blindly. Re-check the passport number, name, birth date, issue date, and expiration date.",
+  },
+  {
+    step: "04",
+    zh: "填 Applicant Information",
+    en: "Complete applicant information",
+    noteZh: "核心欄位全部照護照逐字填。中華民國護照持有人特別留意 PIN。",
+    noteEn: "Core fields should match the passport exactly. ROC passport holders should pay special attention to PIN.",
+  },
+  {
+    step: "05",
+    zh: "填聯絡、父母、雇主、緊急聯絡人",
+    en: "Add contact, parent, work, and emergency details",
+    noteZh: "這些區塊目前可見於官方申請頁，不是推測欄位。",
+    noteEn: "These blocks are visible on the current application flow. They are not hypothetical fields.",
+  },
+  {
+    step: "06",
+    zh: "填 Travel Information",
+    en: "Add travel information",
+    noteZh: "如只是經美國轉機，地址欄可填 In Transit。",
+    noteEn: "If you are only transiting the U.S., you can write In Transit in the address field.",
+  },
+  {
+    step: "07",
+    zh: "回答 Eligibility Questions",
+    en: "Answer eligibility questions",
+    noteZh: "全部照實回答。誤填的風險通常高於被拒本身。",
+    noteEn: "Answer honestly. Misrepresentation usually creates more damage than a denial by itself.",
+  },
+  {
+    step: "08",
+    zh: "Review、付款、保存申請編號",
+    en: "Review, pay, and save the application number",
+    noteZh: "付款後立刻截圖並保存 Application Number。ESTA 是電子化，不一定要紙本，但號碼一定要留。",
+    noteEn: "After payment, save the Application Number immediately. A paper copy is not required, but the number matters.",
+  },
+];
+
+const fieldGuide = [
+  { field: "Issuing Country / Nationality", zh: "選 TAIWAN。", en: "Select TAIWAN.", risk: "high" },
+  { field: "Passport Number", zh: "照護照資料頁逐字填。特別小心 O 與 0、I 與 1。", en: "Match the passport exactly. Be careful with O vs 0 and I vs 1.", risk: "high" },
+  { field: "Family Name / First (Given) Name", zh: "依護照英文欄位拆開填，不要自行調整。", en: "Split the names exactly as shown on the passport.", risk: "high" },
+  { field: "Date of Birth", zh: "依系統格式填，最常見錯誤是把月與日顛倒。", en: "Follow the system format. Month and day reversals are common.", risk: "high" },
+  { field: "National Identification Number", zh: "通常填國民身分證統一編號。", en: "Usually your National ID number.", risk: "high" },
+  { field: "Personal Identification Number (PIN)", zh: "對中華民國護照持有人，實務上就是國民身分證統一編號。這格不要漏。", en: "For ROC passport holders, this is practically your National ID number. Do not skip it.", risk: "high" },
+  { field: "City / Country of Birth", zh: "照系統要求填。", en: "Complete as requested by the form.", risk: "medium" },
+  { field: "Other Citizenship / Nationality", zh: "現在或過去若有其他國籍，必須照實填。", en: "Disclose current or former additional nationality truthfully.", risk: "high" },
+  { field: "Your Contact Information", zh: "填可辨識、可對應的英文地址與聯絡方式。", en: "Use a clear English-format address and reachable contact details.", risk: "medium" },
+  { field: "Social Media", zh: "目前官方頁面顯示 Optional。看到欄位時以當下畫面標示為準。", en: "Currently shown as Optional on the official page. Follow the live label on your screen.", risk: "low" },
+  { field: "Parents", zh: "父母姓名欄位目前可見，建議事先想好正式英文拼法。", en: "Parent name fields are currently visible. Decide on the formal English spelling before you start.", risk: "medium" },
+  { field: "Employment Information", zh: "有工作填公司資訊，是學生就填學校資訊，不要亂編。", en: "Use your real employer data, or school details if you are a student.", risk: "medium" },
+  { field: "Emergency Contact Information", zh: "填一位你真的聯絡得到的人，不一定要在美國。", en: "Use someone who can genuinely be reached. They do not have to be in the U.S.", risk: "low" },
+  { field: "Travel Information", zh: "有在美聯絡人或住宿就照實填。純轉機可填 In Transit。", en: "Use real U.S. contact or lodging details. Transit-only travelers can write In Transit.", risk: "medium" },
+  { field: "Eligibility Questions", zh: "全部誠實作答。這是資格審查區。", en: "Answer honestly. This is the eligibility screening block.", risk: "high" },
+];
+
+const updateMatrix = [
+  { label: "聯絡方式與部分旅行資訊", labelEn: "Contact details and some travel details", result: "update", zh: "通常可線上更新。", en: "Usually can be updated online." },
+  { label: "護照資料", labelEn: "Passport details", result: "reapply", zh: "通常要重送新申請。", en: "Usually requires a new application." },
+  { label: "國籍", labelEn: "Country of citizenship", result: "reapply", zh: "通常要重送新申請。", en: "Usually requires a new application." },
+  { label: "出生日期", labelEn: "Date of birth", result: "reapply", zh: "通常要重送新申請。", en: "Usually requires a new application." },
+  { label: "新護照", labelEn: "New passport", result: "reapply", zh: "必須重新申請。", en: "You must apply again." },
+  { label: "姓名、性別、國籍變更", labelEn: "Name, gender, or citizenship change", result: "reapply", zh: "通常要重新申請。", en: "Usually requires reapplication." },
+  { label: "ESTA 到期", labelEn: "ESTA expired", result: "reapply", zh: "無法延長或續期，需新申請。", en: "It cannot be extended or renewed. File a new application." },
+];
+
+const statusCards = [
+  {
+    code: "Approved",
+    tone: "green",
+    zh: "Authorization Approved。通常可在有效期內多次旅行，但每次停留仍受 VWP 規則限制。",
+    en: "Authorization Approved. You may usually travel multiple times within the validity window, but each stay still follows VWP limits.",
+  },
+  {
+    code: "Pending",
+    tone: "amber",
+    zh: "Authorization Pending。官方表示更新通常會在 72 小時內有結果。",
+    en: "Authorization Pending. Official guidance says an update will usually be available within 72 hours.",
+  },
+  {
+    code: "Not Authorized",
+    tone: "red",
+    zh: "Travel Not Authorized。若情況未改變，再送相同資料通常也不會改變結果，應評估簽證流程。",
+    en: "Travel Not Authorized. If your circumstances have not changed, re-submitting the same profile will usually not change the outcome. Evaluate the visa route.",
+  },
+];
+
+const mistakeList = [
+  ["用了第三方網站或代辦頁面", "Using a third-party site instead of the official portal"],
+  ["把 PIN 漏掉，或把 PIN 填錯", "Skipping or mis-entering the PIN"],
+  ["自動辨識後沒有重查 OCR 結果", "Trusting OCR without re-checking"],
+  ["把姓與名填反", "Reversing family name and given name"],
+  ["日期格式看錯", "Using the wrong date order"],
+  ["以為只是轉機就不用 ESTA", "Assuming transit does not require ESTA"],
+  ["以為核准就一定能入境", "Assuming approval guarantees entry"],
+  ["已被拒卻在情況未變下反覆重送", "Re-submitting after a denial when nothing has changed"],
+  ["沒有保存 Application Number", "Failing to save the Application Number"],
+  ["忽略兒童也要有自己的護照與 ESTA 資格", "Forgetting that children also need their own passport and ESTA eligibility"],
+];
+
+const faqs = [
+  {
+    id: "q1",
+    qZh: "官方 App 能完全取代網站嗎？",
+    qEn: "Can the official app fully replace the website?",
+    aZh: "不建議這樣理解。官方 App 目前主打新個人申請與查既有申請。若你要幫一家人一起辦，網站的 Group of Applications 仍然更直接。",
+    aEn: "Not entirely. The official app currently focuses on new individual applications and existing-application search. For family filings, the website remains the cleaner route because it clearly supports Group of Applications.",
+  },
+  {
+    id: "q2",
+    qZh: "自拍照現在是不是所有人都一律強制？",
+    qEn: "Is the selfie now mandatory for everyone?",
+    aZh: "不應這樣寫。官方首頁目前把旅客自拍列為 If Applicable。比較準確的寫法是，系統可能要求影像驗證，所以建議先準備近期、清楚、正面、未修圖的人像照。",
+    aEn: "The official homepage currently labels the traveler selfie as If Applicable. The accurate reading is that image verification may appear in some flows, so you should prepare a recent, clear, front-facing photo in advance.",
+  },
+  {
+    id: "q3",
+    qZh: "ESTA 核准後一定可以入境嗎？",
+    qEn: "Does ESTA approval guarantee entry?",
+    aZh: "不一定。ESTA 只代表你可以搭乘符合規定的承運人赴美並在口岸請求入境。最後是否准許入境，仍由 CBP 官員決定。",
+    aEn: "No. ESTA approval allows you to board an eligible carrier and request entry at the port of entry. Final admission is still decided by CBP.",
+  },
+  {
+    id: "q4",
+    qZh: "紙本 ESTA 一定要印出來嗎？",
+    qEn: "Do I need to print my ESTA?",
+    aZh: "官方表示 ESTA 是全電子化，不一定要帶紙本到機場。不過實務上，保存 Application Number 與核准畫面截圖仍然非常值得做。",
+    aEn: "Official guidance says ESTA is fully electronic, so you do not have to bring a printed copy to the airport. In practice, keeping your Application Number and screenshots is still smart.",
+  },
+  {
+    id: "q5",
+    qZh: "兒童也需要自己的 ESTA 嗎？",
+    qEn: "Do children need their own ESTA too?",
+    aZh: "是。不要只替成人處理。兒童也需要自己的有效護照，並符合 ESTA 或簽證條件。",
+    aEn: "Yes. Do not process only the adults. Children need their own valid passport and must separately meet ESTA or visa requirements.",
+  },
+];
+
+const links = [
+  { title: "ESTA 官方網站", url: "https://esta.cbp.dhs.gov/", noteZh: "申請、查狀態、看官方首頁資訊。", noteEn: "Apply, check status, and read the official homepage." },
+  { title: "ESTA 官方 FAQ", url: "https://esta.cbp.dhs.gov/faq?lang=zh", noteZh: "中文 FAQ，適合先確認概念。", noteEn: "Chinese FAQ for concept checks." },
+  { title: "Visa Waiver Program", url: "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visa-waiver-program.html", noteZh: "適用範圍、限制條件、VWP 說明。", noteEn: "VWP rules, purpose limits, and restriction logic." },
+  { title: "如何查 ESTA 狀態", url: "https://www.help.cbp.gov/s/article/Article-1445?language=en_US", noteZh: "查詢狀態與常見結果。", noteEn: "Status lookup and outcome definitions." },
+  { title: "如何更新 ESTA 資料", url: "https://www.help.cbp.gov/s/article/Article-1255?language=en_US", noteZh: "哪些欄位可更新，哪些通常要重辦。", noteEn: "What can be updated and what usually requires reapplication." },
+  { title: "如何更正 ESTA 錯誤", url: "https://www.help.cbp.gov/s/article/Article-1439?language=en_US", noteZh: "送出前的更正與重查重點。", noteEn: "Pre-submission correction guidance." },
+  { title: "是否需要紙本 ESTA", url: "https://www.help.cbp.gov/s/article/Article-1262?language=en_US", noteZh: "官方說明不必帶紙本，但建議留紀錄。", noteEn: "Official guidance says a printout is not required, though keeping records is wise." },
+  { title: "ESTA Mobile iPhone App", url: "https://apps.apple.com/us/app/esta-mobile/id1529604353", noteZh: "目前主打新個人申請與查既有申請。", noteEn: "Currently focused on new individual applications and existing-application search." },
+  { title: "ESTA Mobile Android App", url: "https://play.google.com/store/apps/details?id=gov.dhs.cbp.esta", noteZh: "官方行動版入口。", noteEn: "Official mobile entry point." },
+];
+
+function cn(...parts) {
+  return parts.filter(Boolean).join(" ");
 }
 
-function Expandable({ items, color, border }) {
-  return (<div style={{ marginTop:8 }}>{items.map((it,j) => (<div key={j} style={{ display:"flex",alignItems:"flex-start",gap:6,padding:"5px 10px",marginBottom:j<items.length-1?3:0,background:"#fff",borderRadius:6,border:`1px solid ${border||color+"22"}`,fontSize:13,color:"#4b5563",lineHeight:1.55 }}><span style={{color,fontWeight:700,flexShrink:0}}>›</span><span>{it}</span></div>))}</div>);
+function cardTone(tone) {
+  if (tone === "green") return { bg: theme.softGreen, text: theme.green };
+  if (tone === "red") return { bg: theme.softRed, text: theme.red };
+  if (tone === "amber") return { bg: theme.softAmber, text: theme.amber };
+  return { bg: theme.warm, text: theme.deep };
 }
 
-const IH = ({ children }) => <div style={{fontSize:18,fontWeight:800,textAlign:"center",color:"#0f172a",marginBottom:2}}>{children}</div>;
-const ISub = ({ children }) => <p style={{fontSize:12,color:"#94a3b8",margin:"0 0 14px",textAlign:"center",fontStyle:"italic"}}>{children}</p>;
-
-/* ─── INTERACTIVE PENTAGON ───
-   ★ STRUCTURAL CHANGE #1: Professor's analysis sequence
-   Industry(①) → Meso(②) → Macro(③) → Meta(④) → Firm(⑤)
-   Pentagon shape unchanged (textbook standard), but numbering reflects analytical order
-─── */
-function InteractivePentagon() {
-  const [hover, setHover] = useState(null);
-  const levels = [
-    { key:"industry",n:1,pentIdx:2,title:"① Industry 產業",sub:"Competitive landscape — START HERE 從這裡開始",items:["Industry Characteristics","Competition","Cooperation","Strategic Groups","Lead Firms","Micro Policies","Micro Institutions"],col:PC.industry },
-    { key:"meso",n:2,pentIdx:1,title:"② Meso 群聚",sub:"Cluster & value chain ecosystem",items:["Inputs & Suppliers","Demand & Customers","Shared Resources","Shared Activities","Complementarities","Substitutes","Meso Policies","Meso Institutions"],col:PC.meso },
-    { key:"macro",n:3,pentIdx:0,title:"③ Macro 國家",sub:"National environment",items:["Macroeconomics","National Resources & Capabilities","Gov't Policies","Institutions","Civil Society"],col:PC.macro },
-    { key:"supra",n:4,pentIdx:4,title:"④ Meta 超國家",sub:"Global & international forces",items:["Geopolitics","Global Tech","Global Economics","Social/Env Issues","Multilateral Orgs","Trade Blocs","Foreign Gov'ts","Int'l Financial Flows","Foreign MNCs","Other Groups"],col:PC.supra },
-    { key:"firm",n:5,pentIdx:3,title:"⑤ Firm 企業",sub:"Internal strategy & execution — END HERE 最後才到這裡",col:PC.firm,dual:{left:{heading:"Strategy (SPARK+L)",items:["Scope","Positioning","Activities","Resources","Knowledge","Leadership"]},right:{heading:"Execution",items:["Org & Mgmt","Governance","Firm Policies","Firm Institutions"]}}},
-  ];
-
-  const cx=150,cy=148,r=115;
-  const pentLabels=["Macro\n國家","Meso\n群聚","Industry\n產業","Firm\n企業","Meta\n超國家"];
-  const pentCols=[PC.macro.main,PC.meso.main,PC.industry.main,PC.firm.main,PC.supra.main];
-  const pentPts=[];
-  for(let i=0;i<5;i++){const a=(Math.PI*2*i)/5-Math.PI/2;pentPts.push({x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)});}
-  const pentKeyMap={};levels.forEach(l=>{pentKeyMap[l.pentIdx]=l.key;});
-
-  return (<div>
-    <IH>Drivers of Firm Performance 企業績效驅動因素</IH>
-    <ISub>教授分析順序：產業→群聚→國家→超國家→企業 · 互動式：懸停或點擊各層級</ISub>
-    <div style={{background:"#fff",borderRadius:16,padding:16,boxShadow:"0 4px 20px rgba(0,0,0,0.06)",marginBottom:14,display:"flex",justifyContent:"center"}}>
-      <svg viewBox="0 0 300 296" style={{width:"100%",maxWidth:300,height:"auto"}}>
-        <defs><radialGradient id="fpg" cx="50%" cy="48%" r="55%"><stop offset="0%" stopColor="#fff"/><stop offset="100%" stopColor="#f1f5f9"/></radialGradient><filter id="fpds"><feDropShadow dx="0" dy="3" stdDeviation="4" floodOpacity="0.1"/></filter></defs>
-        <polygon points={pentPts.map(p=>`${p.x},${p.y}`).join(" ")} fill="url(#fpg)" stroke="#cbd5e1" strokeWidth="1.5" filter="url(#fpds)"/>
-        {pentPts.map((p,i)=>{const next=pentPts[(i+1)%5];const key=pentKeyMap[i];const isH=hover===key;return <polygon key={i} points={`${cx},${cy} ${p.x},${p.y} ${next.x},${next.y}`} fill={isH?pentCols[i]:"transparent"} opacity={isH?0.12:0} style={{transition:"opacity 0.3s"}}/>;
-        })}
-        {pentPts.map((_,i)=>{const f=0.58;const a=(Math.PI*2*i)/5-Math.PI/2;const mx=cx+r*f*Math.cos(a);const my=cy+r*f*Math.sin(a);const key=pentKeyMap[i];const isH=hover===key;return <text key={i} x={mx} y={my} textAnchor="middle" fontSize={isH?"11":"10"} fill={pentCols[i]} fontWeight="700" opacity={isH?1:0.7} style={{transition:"all 0.3s"}}>{pentLabels[i].split("\n").map((l,li)=><tspan key={li} x={mx} dy={li===0?0:12}>{l}</tspan>)}</text>;})}
-        <circle cx={cx} cy={cy} r="28" fill="#fff" stroke="#94a3b8" strokeWidth="1"/>
-        <text x={cx} y={cy-3} textAnchor="middle" fontSize="10" fontWeight="600" fill="#94a3b8">Firm</text>
-        <text x={cx} y={cy+10} textAnchor="middle" fontSize="12" fontWeight="800" fill="#0f172a">Performance</text>
-      </svg>
-    </div>
-    <div style={{display:"flex",flexDirection:"column",gap:8}}>
-      {levels.map(lv=>{const isH=hover===lv.key;return(
-        <div key={lv.key} onMouseEnter={()=>setHover(lv.key)} onMouseLeave={()=>setHover(null)} onTouchStart={()=>setHover(lv.key)} onTouchEnd={()=>setHover(null)} style={{background:isH?lv.col.light:"#fff",border:`1.5px solid ${isH?lv.col.main+"55":"#e5e7eb"}`,borderRadius:14,padding:"12px 14px",boxShadow:isH?`0 4px 16px ${lv.col.main}15`:"0 1px 4px rgba(0,0,0,0.03)",transition:"all 0.3s ease"}}>
-          <div style={{display:"flex",alignItems:"center",marginBottom:5}}>
-            <Num n={lv.n} color={lv.col.main}/>
-            <div><div style={{color:lv.col.main,fontWeight:700,fontSize:14,lineHeight:1.2}}>{lv.title}</div><div style={{color:"#94a3b8",fontSize:11}}>{lv.sub}</div></div>
-          </div>
-          {lv.items ? <div style={{color:"#4b5563",fontSize:13,lineHeight:1.7,paddingLeft:30}}>{lv.items.join("  ·  ")}</div> : (
-            <div style={{display:"flex",gap:20,flexWrap:"wrap",paddingLeft:30}}>
-              {[lv.dual.left,lv.dual.right].map((col,ci)=><div key={ci}><div style={{fontWeight:600,fontSize:11,color:lv.col.dark,marginBottom:2,textTransform:"uppercase",letterSpacing:"0.5px"}}>{col.heading}</div><div style={{fontSize:13,color:"#4b5563",lineHeight:1.7}}>{col.items.join("  ·  ")}</div></div>)}
-            </div>
-          )}
-        </div>
-      );})}
-    </div>
-  </div>);
-}
-
-/* ─── INTERACTIVE FIRM LEVEL ─── */
-function InteractiveFirmLevel() {
-  const [active, setActive] = useState(null);
-  const strat=[{k:"Scope 範疇",d:"Which markets, segments, geographies to compete in 在哪些市場、區隔、地理區域競爭"},{k:"Positioning 定位",d:"Where to position: price, performance, cost 如何在價格、績效、成本上定位"},{k:"Activities 活動",d:"What activities to perform and how to configure them 執行哪些活動及如何配置"},{k:"Resources 資源",d:"What tangible/intangible assets to develop and deploy 開發並部署哪些有形/無形資產"},{k:"Knowledge 知識",d:"What knowledge to create, acquire, and leverage 創造、取得並運用哪些知識"},{k:"Leadership 領導",d:"Who leads and how they set direction 誰領導及如何設定方向"}];
-  const exec=[{k:"Organization & Management 組織與管理",d:"Structure, processes, people, culture 結構、流程、人才、文化"},{k:"Governance 治理",d:"Oversight, incentives, accountability 監督、激勵、問責"},{k:"Firm Policies 企業政策",d:"Internal rules and guidelines 內部規則與準則"},{k:"Firm Institutions 企業制度",d:"Norms, routines, embedded practices 規範、例行程序、嵌入式實踐"}];
-  const ItemCard=({item})=>{const on=active===item.k;return(<div onClick={()=>setActive(on?null:item.k)} style={{background:on?PC.firm.light:"#fff",border:`1px solid ${on?PC.firm.mid:"#e5e7eb"}`,borderRadius:10,padding:"10px 12px",marginBottom:6,cursor:"pointer",transition:"all 0.2s"}}><div style={{fontSize:13,fontWeight:600,color:on?PC.firm.dark:"#1f2937"}}>{item.k}</div>{on&&<div style={{fontSize:12,color:"#6b7280",marginTop:4,lineHeight:1.5}}>{item.d}</div>}</div>);};
-
-  return (<div>
-    <IH>Firm Level Drivers 企業層級驅動因素</IH>
-    <ISub>點擊任何項目查看說明 · Tap any item for description</ISub>
-    <div style={{display:"flex",flexWrap:"wrap",gap:12}}>
-      <div style={{flex:"1 1 200px",minWidth:0}}>
-        <div style={{fontSize:11,fontWeight:700,color:PC.firm.dark,textTransform:"uppercase",letterSpacing:1,marginBottom:8,paddingLeft:4}}>Strategy (SPARK+L)</div>
-        {strat.map(i=><ItemCard key={i.k} item={i}/>)}
-      </div>
-      <div style={{flex:"1 1 200px",minWidth:0}}>
-        <div style={{fontSize:11,fontWeight:700,color:PC.firm.dark,textTransform:"uppercase",letterSpacing:1,marginBottom:8,paddingLeft:4}}>Execution 執行</div>
-        {exec.map(i=><ItemCard key={i.k} item={i}/>)}
-      </div>
-    </div>
-  </div>);
-}
-
-/* ─── INTERACTIVE WHAT IS INDUSTRY ───
-   ★ STRUCTURAL CHANGE #2: 「有用輸出」三步定義法
-─── */
-function InteractiveWhatIsIndustry() {
-  return (<div style={{marginBottom:16}}>
-    <IH>What Constitutes an Industry? 何謂產業？</IH>
-    <ISub>界定競爭的範圍 Defining the boundaries of competition</ISub>
-
-    {/* ★ NEW: 3-step useful output methodology */}
-    <div style={{background:"linear-gradient(135deg,#1e40af,#2563eb)",borderRadius:14,padding:"18px 16px",marginBottom:14,color:"#fff",boxShadow:"0 4px 20px rgba(37,99,235,0.2)"}}>
-      <div style={{fontSize:15,fontWeight:800,textAlign:"center",marginBottom:12}}>「有用輸出」三步定義法 The "Useful Output" Method</div>
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {[
-          {n:"1",title:"客戶實際收到什麼？",sub:"What useful output does the customer receive?",detail:"不看技術、不看產業代碼，只看最終到達客戶手中的產品或服務的形式與功能。",ex:"手機用戶收到的是：行動通訊 + 應用程式 + 隨身運算"},
-          {n:"2",title:"誰在直接爭奪這個客戶？",sub:"Who competes directly for that customer?",detail:"提供相同有用輸出的所有企業，無論底層技術或商業模式多不同，都在同一產業。",ex:"iOS 與 Android：軟體工程完全不同，但客戶收到同樣的有用輸出 → 同一產業"},
-          {n:"3",title:"劃定產業邊界",sub:"Draw the industry boundary",detail:"不同有用輸出 = 不同產業。即便企業都被歸類為「科技」，只要主業輸出不同就不是同產業。",ex:"Amazon（物流/零售）、Microsoft（生產力工具）、Meta（社群媒體）→ 三個不同產業"},
-        ].map(step=>(
-          <div key={step.n} style={{background:"rgba(255,255,255,0.12)",borderRadius:10,padding:"12px 14px",borderLeft:"3px solid rgba(255,255,255,0.5)"}}>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-              <span style={{background:"#fff",color:"#1e40af",width:22,height:22,borderRadius:"50%",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,flexShrink:0}}>{step.n}</span>
-              <div><div style={{fontWeight:700,fontSize:14}}>{step.title}</div><div style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>{step.sub}</div></div>
-            </div>
-            <div style={{fontSize:12,color:"rgba(255,255,255,0.9)",lineHeight:1.6,paddingLeft:30,marginBottom:4}}>{step.detail}</div>
-            <div style={{fontSize:11,color:"#fbbf24",paddingLeft:30,fontStyle:"italic"}}>例：{step.ex}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    {/* Original definition section */}
-    <div style={{background:"#fff",borderRadius:14,border:"2px solid #2563eb22",padding:"16px 14px",marginBottom:12,boxShadow:"0 2px 12px rgba(37,99,235,0.06)"}}>
-      <div style={{display:"flex",alignItems:"center",marginBottom:10}}>
-        <div style={{width:26,height:26,borderRadius:8,background:"linear-gradient(135deg,#2563eb,#3b82f6)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:13,fontWeight:700,marginRight:10,flexShrink:0}}>✓</div>
-        <div style={{fontSize:15,fontWeight:700,color:"#1e40af"}}>An Industry Includes 產業包含</div>
-      </div>
-      <div style={{paddingLeft:36,display:"flex",flexDirection:"column",gap:6}}>
-        {[<span>Products/services with <b style={{color:"#1e40af"}}>similar form and function</b> in <b style={{color:"#1e40af"}}>direct competition</b><br/><span style={{fontSize:11,color:"#64748b"}}>形式與功能相似且直接競爭的產品／服務</span></span>,<span>The <b style={{color:"#1e40af"}}>firms</b> that provide these products and services<br/><span style={{fontSize:11,color:"#64748b"}}>提供這些產品與服務的企業</span></span>].map((txt,i)=>(<div key={i} style={{fontSize:13,color:"#374151",lineHeight:1.6,paddingLeft:12,borderLeft:"3px solid #3b82f6"}}>{txt}</div>))}
-      </div>
-    </div>
-    <div style={{background:"#fffbeb",borderRadius:14,border:"2px solid #d9770622",padding:"16px 14px",boxShadow:"0 2px 12px rgba(217,119,6,0.06)"}}>
-      <div style={{display:"flex",alignItems:"center",marginBottom:10}}>
-        <div style={{width:26,height:26,borderRadius:8,background:"linear-gradient(135deg,#d97706,#f59e0b)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:13,fontWeight:700,marginRight:10,flexShrink:0}}>!</div>
-        <div style={{fontSize:15,fontWeight:700,color:"#92400e"}}>Key Notes 重要事項</div>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",gap:5}}>
-        {["Implies a particular set of customers 意味著特定的客戶群","Does not generally conform to standard industry codes 通常不符合標準產業代碼","Industry boundaries may shift over time 產業邊界可能隨時間改變","Same product may appear in different industries if different customers buy for different purposes 若不同客戶因不同目的購買，同一產品可能出現在不同產業"].map((txt,i)=>(<div key={i} style={{display:"flex",alignItems:"flex-start",gap:8,padding:"8px 12px",background:"#fff",borderRadius:8,border:"1px solid #fde68a"}}><Num n={i+1} color="#d97706"/><span style={{fontSize:13,color:"#4b5563",lineHeight:1.55}}>{txt}</span></div>))}
-      </div>
-    </div>
-  </div>);
-}
-
-/* ─── INTERACTIVE INDUSTRY DETAIL ─── */
-function InteractiveIndustryDetail() {
-  const [open, setOpen] = useState(null);
-  const sections=[
-    {key:"ic",title:"Industry Characteristics 產業特性",color:"#0369a1",border:"#bae6fd",items:["Relevant segments, activities, resources, knowledge 相關區隔、活動、資源、知識","Relevant technologies and processes 相關技術與流程","Geographic scope of competition 競爭的地理範圍"]},
-    {key:"comp",title:"Competition 競爭",color:"#b91c1c",border:"#fecaca",items:["Ferocity of competition 競爭的激烈程度","Nature of competition 競爭的本質","Identity of competitors 競爭者身分","Strategies of competitors 競爭者策略","Capabilities of competitors 競爭者能力"]},
-    {key:"coop",title:"Cooperation 合作",color:"#059669",border:"#a7f3d0",items:["Scope for cooperation with competitors 與競爭者合作的空間","Alliances 聯盟","Joint development or marketing 聯合開發或行銷","Lobbying 遊說","Other joint activities 其他聯合活動"]},
-    {key:"sg",title:"Strategic Grouping 策略群組",color:"#7c3aed",border:"#ddd6fe",items:["Groups of firms with similar strategies 策略相似的企業群組","Interaction within and between groups 群組內及群組間的互動"]},
-    {key:"lf",title:"Lead Firms 領導企業",color:"#d97706",border:"#fde68a",items:["Strength 實力","Behavior 行為"]},
-  ];
-  return (<div style={{marginBottom:16}}>
-    <IH>Industry Drivers — Interactive Detail 產業驅動因素——互動詳解</IH>
-    <ISub>點擊展開各類別 · Tap each category to expand</ISub>
-    <div style={{display:"flex",flexDirection:"column",gap:6}}>
-      {sections.map(sec=>{const on=open===sec.key;return(
-        <div key={sec.key} onClick={()=>setOpen(on?null:sec.key)} style={{background:on?`${sec.color}08`:"#fff",border:`1.5px solid ${on?sec.color+"44":"#e5e7eb"}`,borderRadius:12,padding:"12px 14px",cursor:"pointer",boxShadow:on?`0 4px 14px ${sec.color}10`:"0 1px 3px rgba(0,0,0,0.03)",transition:"all 0.25s ease"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <div style={{width:10,height:10,borderRadius:"50%",background:sec.color,boxShadow:on?`0 0 8px ${sec.color}55`:"none",transition:"box-shadow 0.3s"}}/>
-              <span style={{fontSize:14,fontWeight:700,color:on?sec.color:"#374151",transition:"color 0.2s"}}>{sec.title}</span>
-              <span style={{fontSize:11,color:"#94a3b8",fontWeight:500}}>({sec.items.length})</span>
-            </div>
-            <span style={{fontSize:14,color:"#94a3b8",transform:on?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.25s",display:"inline-block"}}>▾</span>
-          </div>
-          {on && <Expandable items={sec.items} color={sec.color} border={sec.border}/>}
-        </div>
-      );})}
-    </div>
-  </div>);
-}
-
-/* ─── INTERACTIVE COMPETITION SPECTRUM ─── */
-function InteractiveCompetition() {
-  const [exp, setExp] = useState(null);
-  const types=[
-    {key:"mono",label:"Monopoly 獨佔",color:"#7c3aed",items:["No competition 無競爭","Most favorable unless limited by regulation 除非受法規限制，否則最有利"]},
-    {key:"oligo",label:"Oligopoly 寡佔",color:"#2563eb",items:["Competition among limited number of firms 有限數量企業間的競爭","Recognition of interdependence 認知到相互依存"]},
-    {key:"hyper",label:"Hypercompetition 超競爭",color:"#d97706",items:["Several firms, potential new entrants 數家企業，潛在新進者","Firms may distinguish themselves for short period 企業可能短暫地區分自己"]},
-    {key:"segment",label:"Segmented Competition 區隔競爭",color:"#475569",items:["Multiple segments with distinct buyer groups 多個區隔各有不同買方群體","Different price/performance packages 不同的價格/績效組合","Potential pricing flexibility within segments 區隔內有定價彈性","Competition dynamics differ across segments 各區隔競爭動態不同"]},
-    {key:"perfect",label:"Perfect Competition 完全競爭",color:"#ea580c",items:["Many firms that cannot distinguish themselves 許多無法區分自己的企業","Price competition only 僅有價格競爭"]},
-    {key:"subsid",label:"Subsidized Competition 補貼競爭",color:"#dc2626",items:["Money-losing firms kept in business 虧損企業被維持營運","Competition on price 價格競爭"]},
-  ];
-  const spectrum=[{label:"Subsidized",color:"#dc2626",x:35},{label:"Perfect",color:"#ea580c",x:130},{label:"Hyper",color:"#d97706",x:225},{label:"Segmented",color:"#475569",x:310},{label:"Oligopoly",color:"#2563eb",x:395},{label:"Monopoly",color:"#7c3aed",x:465}];
-
-  return (<div style={{marginBottom:16}}>
-    <IH>Types of Competition 競爭類型</IH>
-    <ISub>點擊查看特徵 · Tap each type to see characteristics</ISub>
-    <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:16}}>
-      {types.map(t=>{const on=exp===t.key;return(
-        <div key={t.key} onClick={()=>setExp(on?null:t.key)} style={{display:"flex",alignItems:"flex-start",gap:12,padding:"12px 14px",borderRadius:12,cursor:"pointer",background:on?`${t.color}08`:"#fff",border:`1.5px solid ${on?t.color+"44":"#e5e7eb"}`,boxShadow:on?`0 4px 14px ${t.color}10`:"0 1px 3px rgba(0,0,0,0.03)",transition:"all 0.25s ease"}}>
-          <div style={{width:12,height:12,borderRadius:"50%",backgroundColor:t.color,flexShrink:0,marginTop:3,boxShadow:on?`0 0 10px ${t.color}55`:"none",transition:"box-shadow 0.3s"}}/>
-          <div style={{flex:1}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <span style={{fontWeight:700,fontSize:14,color:on?t.color:"#1f2937",transition:"color 0.2s"}}>{t.label}</span>
-              <span style={{fontSize:14,color:"#94a3b8",transform:on?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.25s",display:"inline-block"}}>▾</span>
-            </div>
-            {on && <Expandable items={t.items} color={t.color}/>}
-          </div>
-        </div>
-      );})}
-    </div>
-    <div style={{background:"#fff",borderRadius:14,border:"1.5px solid #e2e8f0",padding:"18px 12px",boxShadow:"0 2px 12px rgba(0,0,0,0.04)"}}>
-      <div style={{fontSize:15,fontWeight:700,textAlign:"center",color:"#0f172a",marginBottom:4}}>Where is the Industry? 產業在哪裡？</div>
-      <p style={{fontSize:11,color:"#94a3b8",textAlign:"center",margin:"0 0 10px"}}>將你的產業定位在光譜上 Position your industry on the spectrum</p>
-      <svg viewBox="0 0 500 80" style={{width:"100%",height:"auto"}}>
-        <defs><linearGradient id="cgrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#dc2626"/><stop offset="30%" stopColor="#d97706"/><stop offset="60%" stopColor="#475569"/><stop offset="80%" stopColor="#2563eb"/><stop offset="100%" stopColor="#7c3aed"/></linearGradient></defs>
-        <rect x="30" y="18" width="440" height="6" rx="3" fill="#e2e8f0"/>
-        <rect x="30" y="18" width="440" height="6" rx="3" fill="url(#cgrad)" opacity="0.6"/>
-        {spectrum.map((sp,i)=><g key={i}><circle cx={sp.x} cy="21" r="7" fill={sp.color} stroke="#fff" strokeWidth="2.5"/><text x={sp.x} y="46" textAnchor="middle" fontSize="9" fill={sp.color} fontWeight="700">{sp.label}</text></g>)}
-        <text x="30" y="70" fontSize="9" fill="#94a3b8">← 競爭多 More competition</text>
-        <text x="470" y="70" fontSize="9" fill="#94a3b8" textAnchor="end">Less competition 競爭少 →</text>
-      </svg>
-    </div>
-  </div>);
-}
-
-/* ─── NEW: INTERACTIVE INDUSTRY ECONOMICS ───
-   ★ STRUCTURAL CHANGE #3: Dynamic industry economics analysis
-   Not "what are current margins" but "why is profit structurally possible"
-─── */
-function InteractiveIndustryEconomics() {
-  const [open, setOpen] = useState(null);
-  const questions = [
-    { key:"why", title:"Why is profit POSSIBLE here? 利潤為何在此產業有可能存在？", color:"#059669", border:"#a7f3d0",
-      items:[
-        "Which departures from perfect competition exist? 存在哪些偏離完全競爭的條件？",
-        "Entry barriers: scale, learning, scope, brands, patents, regulation, retaliation 進入障礙有哪些？",
-        "Exit barriers: specialized assets, strategic/emotional barriers, exit costs 退出障礙有哪些？",
-        "Information asymmetries between firms and/or customers 企業與客戶之間的資訊不對稱？",
-        "Are products differentiable or homogeneous? 產品可區分還是同質？",
-      ]},
-    { key:"where", title:"Where does profit COME FROM? 利潤的來源是什麼？", color:"#2563eb", border:"#bfdbfe",
-      items:[
-        "Price premiums from differentiation (brand, quality, features)? 差異化帶來的價格溢價？",
-        "Cost advantages from scale, learning, scope, or resource access? 規模、學習、範圍或資源取得帶來的成本優勢？",
-        "Customer switching costs or lock-in? 客戶的轉換成本或鎖定效應？",
-        "Regulatory protection or government policies? 法規保護或政府政策？",
-        "Network effects or platform dynamics? 網路效應或平台動態？",
-        "Control of scarce inputs, distribution, or complementary assets? 稀缺投入、配銷或互補資產的控制？",
-      ]},
-    { key:"shift", title:"What SHIFTS would change the profit structure? 哪些變動會改變利潤結構？", color:"#dc2626", border:"#fecaca",
-      items:[
-        "New entrants overcoming barriers (technology change, regulation change)? 新進者克服障礙（技術變革、法規變革）？",
-        "Substitutes emerging from adjacent industries? 鄰近產業出現替代品？",
-        "Buyer or supplier power shifting (consolidation, vertical integration)? 買方或供應商權力變化？",
-        "Competition type migrating on the spectrum (e.g., oligopoly → hypercompetition)? 競爭類型在光譜上遷移？",
-        "Macro/Meta forces disrupting the structure (trade policy, technology waves, geopolitics)? 宏觀/超國家力量衝擊結構？",
-        "Lead firms changing strategy or new lead firms emerging? 領導企業策略改變或新領導企業出現？",
-      ]},
-  ];
-
-  return (<div style={{marginBottom:16}}>
-    <IH>Industry Economics 產業經濟學</IH>
-    <ISub>不是靜態描述現況——而是利潤結構如何成形、為何持續、何時改變</ISub>
-    <div style={{background:"#fef2f2",border:"2px solid #dc262622",borderRadius:14,padding:"12px 14px",marginBottom:12}}>
-      <div style={{fontSize:13,fontWeight:700,color:"#991b1b",textAlign:"center",marginBottom:4}}>⚠️ 常見錯誤 Common Mistake</div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>
-        <div style={{background:"#fff",border:"1px solid #fca5a5",borderRadius:8,padding:"6px 12px",fontSize:12}}><span style={{color:"#dc2626",fontWeight:700}}>✗</span> 把 Industry Economics 當成「現在利潤率多少」</div>
-        <div style={{background:"#fff",border:"1px solid #86efac",borderRadius:8,padding:"6px 12px",fontSize:12}}><span style={{color:"#16a34a",fontWeight:700}}>✓</span> 問「利潤為何結構性地有可能？從哪來？什麼會改變它？」</div>
-      </div>
-    </div>
-    <div style={{display:"flex",flexDirection:"column",gap:8}}>
-      {questions.map(q=>{const on=open===q.key;return(
-        <div key={q.key} onClick={()=>setOpen(on?null:q.key)} style={{background:on?`${q.color}06`:"#fff",border:`1.5px solid ${on?q.color+"44":"#e5e7eb"}`,borderRadius:12,padding:"12px 14px",cursor:"pointer",boxShadow:on?`0 4px 14px ${q.color}10`:"0 1px 3px rgba(0,0,0,0.03)",transition:"all 0.25s ease"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <span style={{fontSize:14,fontWeight:700,color:on?q.color:"#374151",transition:"color 0.2s",flex:1}}>{q.title}</span>
-            <span style={{fontSize:14,color:"#94a3b8",transform:on?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.25s",display:"inline-block",flexShrink:0,marginLeft:8}}>▾</span>
-          </div>
-          {on && <Expandable items={q.items} color={q.color} border={q.border}/>}
-        </div>
-      );})}
-    </div>
-  </div>);
-}
-
-/* ═══════════════════════════════════════
-   TAB CONTENT
-   ═══════════════════════════════════════ */
-
-function Overview() {
-  return (<div>
-    <SectionTitle cn="考試資訊與作答方式">Exam Info & How to Write</SectionTitle>
-    <Card title="Exam Structure (from Practice Exam)" cn="考試結構（來自練習考題）" color="blue">
-      <div className="grid grid-cols-3 gap-3 mb-3">
-        {[{q:"Q1",t:"Five Levels",w:"25%",m:"30 min"},{q:"Q2",t:"VRIO → ARK",w:"25%",m:"30 min"},{q:"Q3",t:"ETA/Swatch",w:"25%",m:"30 min"}].map(x=>(<div key={x.q} className="bg-white border rounded-lg p-3 text-center"><div className="font-bold text-blue-700 text-lg">{x.q}</div><div className="text-xs font-semibold">{x.t}</div><div className="text-xs text-slate-500">{x.w} · {x.m}</div></div>))}
-      </div>
-      <div className="bg-amber-50 border border-amber-300 rounded p-2 text-xs">⚠️ Total shown = 75%. Expect a <strong>4th unseen question (25%)</strong>. Prepare to apply Five Levels + SPARK to an unfamiliar scenario.</div>
-    </Card>
-    <Card title="The Single Governing Logic" cn="整門課唯一主線" color="green">
-      <div className="bg-white rounded-lg p-4 text-center border">
-        <div className="text-lg font-bold text-green-800 mb-2">Understand and improve firm performance</div>
-        <div className="text-sm text-slate-600 mb-3">理解並改善企業績效</div>
-        <div className="flex flex-wrap justify-center gap-2">
-          <Tag color="green">Performance is RELATIVE 相對概念</Tag><Tag color="green">Comprehensive 全面</Tag><Tag color="green">Integrative 整合</Tag><Tag color="green">Dynamic 動態</Tag><Tag color="green">Question-based 問題導向</Tag>
-        </div>
-      </div>
-    </Card>
-    <Card title="Strategy in This Course (Ch.1)" cn="本課程的策略定義" color="purple">
-      <div className="flex items-center justify-center flex-wrap gap-1 text-xs font-semibold">
-        <Tag color="purple">Create value for customers</Tag><span className="text-purple-400">+</span><Tag color="purple">Beat competitors</Tag><span className="text-purple-400">+</span><Tag color="purple">Get paid for it</Tag>
-      </div>
-      <div className="mt-3 flex items-center justify-center flex-wrap gap-1 text-xs"><Tag color="slate">Analysis</Tag><Arrow /><Tag color="slate">Decisions</Tag><Arrow /><Tag color="slate">Action / Execution</Tag><Arrow /><Tag color="slate">Leadership</Tag></div>
-      <p className="mt-3 text-xs text-center text-slate-500">No "magic bullets." Strategy is both big picture AND detailed plans for execution.</p>
-    </Card>
-    <Card title="6-Step Answer Formula" cn="六步作答公式（依教材要求推論）" color="amber">
-      <div className="space-y-2">
-        {[["1","State the performance issue","點出績效問題"],["2","Identify the dominant level","指出關鍵層級"],["3","Name specific drivers","列出具體 driver"],["4","Explain HOW → mechanism","解釋作用機制"],["5","Cross-level linkage","跨層級連結"],["6","Judge: positive/negative? Persist?","判斷正負＋趨勢"]].map(([n,en,cn])=>(<div key={n} className="flex items-start gap-2"><div className="bg-amber-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0">{n}</div><div><span className="font-semibold text-sm">{en}</span> <span className="text-xs text-slate-500">{cn}</span></div></div>))}
-      </div>
-    </Card>
-    <Card title="Weak vs. Strong" cn="弱答 vs. 強答" color="red">
-      <table className="w-full text-xs"><thead><tr><th className="text-left pb-1 text-red-700">Weak ✗</th><th className="text-left pb-1 text-green-700">Strong ✓</th></tr></thead>
-      <tbody className="divide-y">
-        {[["Defines concepts only","Applies to specific case"],['"Competition was intense"',"WHY intense, HOW changed profitability"],['"Resources mattered"',"WHICH, why V-R-I, organized to exploit?"],["Static snapshot","Trend + future direction"],["One level only","Cross-level connection"],["Generic conclusion","Crisp judgment on performance"]].map(([w,s],i)=>(<tr key={i}><td className="py-1 pr-2 text-red-600">{w}</td><td className="py-1 text-green-700">{s}</td></tr>))}
-      </tbody></table>
-    </Card>
-  </div>);
-}
-
-function FiveLevels() {
-  return (<div>
-    <SectionTitle cn="五層架構——互動圖表 + 詳細參考">The Five-Level Framework</SectionTitle>
-    <div className="mb-6"><InteractivePentagon /></div>
-    <Card title="Three Critical Insights (Ch.2)" cn="三大洞察" color="blue">
-      <div className="grid grid-cols-3 gap-2">
-        {[["Systemic 系統性","Levels interdependent; changes cascade"],["Changing 持續變動","Must project forward, not snapshot"],["Interdependent 相互依存","Favorable macro ≠ firm success if micro/firm unfavorable"]].map(([t,d])=>(<div key={t} className="bg-white border rounded p-3 text-center"><div className="font-bold text-blue-700 text-sm mb-1">{t}</div><div className="text-xs text-slate-600">{d}</div></div>))}
-      </div>
-    </Card>
-    <Card title="Levels AND Trends (Ch.2)" cn="水準與趨勢" color="amber">
-      <div className="text-center font-semibold">"Better might still not be good. Worse might still not be bad."</div>
-      <div className="text-center text-xs text-slate-500 mt-1">變好不一定真的好，變差也不一定真的壞</div>
-    </Card>
-    <Card title="Q1 Template" cn="Q1 快速作答模板" color="green">
-      <div className="bg-white border rounded p-3 text-sm italic">"At the [level], the crucial driver was [X]. This mattered because [mechanism]. It influenced profitability by [price / cost / demand / bargaining / entry / rivalry]. The impact was [positive / negative], and the trend was [direction]."</div>
-      <div className="mt-2 bg-red-50 border border-red-300 rounded p-2 text-xs">⚠️ Q1 requires 5 different cases, one per level. Only Stitch Fix and Seiko are in files. <strong>Fill 3 more from your Session 1–8 class notes.</strong></div>
-    </Card>
-  </div>);
-}
-
-function SparkPosition() {
-  return (<div>
-    <SectionTitle cn="SPARK 架構與定位分析">SPARK Model & Positioning</SectionTitle>
-    <div className="mb-6 bg-white rounded-xl p-4 border border-slate-200"><InteractiveFirmLevel /></div>
-    <div className="bg-gradient-to-br from-green-800 to-green-900 text-white rounded-xl p-5 mb-4">
-      <div className="text-center font-bold text-xl mb-1">Strategy = SPARK</div>
-      <div className="text-center text-green-300 text-xs mb-4">Ch.3 — The core firm-level analytical tool</div>
-      <div className="space-y-2">
-        {[{l:"S",w:"cope",q:"WHERE do we compete?",cn:"在哪裡？",d:"Industries, segments, geography",c:"bg-green-700"},{l:"P",w:"ositioning",q:"HOW do we compete?",cn:"怎麼競爭？",d:"Price/performance + cost + vs. competitors",c:"bg-green-600"},{l:"A",w:"ctivities",q:"What do we DO?",cn:"做什麼？",d:"Tasks to serve customers",c:"bg-emerald-700"},{l:"R",w:"esources",q:"What do we HAVE?",cn:"有什麼？",d:"Brands, patents, workforce, facilities, financial",c:"bg-emerald-600"},{l:"K",w:"nowledge",q:"What do we KNOW?",cn:"知道什麼？",d:"Market, tech, competitor, process, organizational",c:"bg-teal-700"}].map(s=>(<div key={s.l} className={`${s.c} rounded-lg p-3 flex items-center gap-3`}><div className="text-3xl font-black text-green-200 w-8">{s.l}</div><div className="flex-1"><div className="flex items-baseline gap-2"><span className="font-bold">{s.l}<span className="font-normal">{s.w}</span></span><span className="text-green-300 text-xs">{s.q} {s.cn}</span></div><div className="text-xs text-green-200 mt-0.5">{s.d}</div></div></div>))}
-      </div>
-      <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs"><div className="bg-green-700 rounded p-2"><strong>S</strong> determines WHERE</div><div className="bg-green-700 rounded p-2"><strong>P + A</strong> determine HOW</div><div className="bg-green-700 rounded p-2"><strong>R + K</strong> determine WITH WHAT</div></div>
-      <div className="mt-2 text-center text-xs text-green-300">High-performing firms often have a distinctive SPARK.</div>
-    </div>
-    <Card title="Positioning: The Full Picture (Ch.3)" cn="定位分析——最容易考、最容易寫錯" color="red">
-      <div className="bg-red-50 border border-red-200 rounded p-3 mb-3 text-center">
-        <div className="font-bold text-red-700">You CANNOT judge positioning from:</div>
-        <div className="flex justify-center gap-4 mt-2"><div className="bg-white border border-red-300 rounded px-3 py-1 text-sm">Price/Performance alone ✗</div><div className="bg-white border border-red-300 rounded px-3 py-1 text-sm">Cost/Performance alone ✗</div></div>
-        <div className="mt-2 font-bold text-green-700">Only MARGIN (Price − Cost) reveals truth ✓</div>
-      </div>
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        {[{f:"Firm B",p:"Below avg",c:"Very low",pr:"Above avg ✓",st:"Cost Leader",cl:"border-blue-400 bg-blue-50"},{f:"Firm C",p:"High",c:"Slightly high",pr:"Above avg ✓",st:"Differentiator",cl:"border-purple-400 bg-purple-50"},{f:"Firm D",p:"High",c:"Low",pr:"Highest ✓✓",st:"Rare: IP/scale/platform",cl:"border-green-400 bg-green-50"}].map(f=>(<div key={f.f} className={`border-2 ${f.cl} rounded-lg p-3 text-center`}><div className="font-bold text-sm">{f.f}</div><div className="text-xs mt-1">Price: {f.p}</div><div className="text-xs">Cost: {f.c}</div><div className="text-xs font-bold mt-1">Profit: {f.pr}</div><div className="text-xs text-slate-500 mt-1">{f.st}</div></div>))}
-      </div>
-      <div className="text-xs text-slate-600">Why not all Firm D? Smart competitors + inherent tradeoffs. Exceptions: IP as standard (Microsoft), massive scale (Intel), resource advantages (Saudi Aramco), platform (Google/Facebook).</div>
-    </Card>
-    <Card title="A-R-K Advantage Logic" cn="活動-資源-知識的優勢邏輯" color="purple">
-      <div className="space-y-2"><div className="bg-red-50 border-l-2 border-red-400 p-2 text-xs"><strong>NOT enough:</strong> "We are better at marketing"</div><div className="bg-green-50 border-l-2 border-green-400 p-2 text-xs"><strong>IS enough:</strong> "We are better at marketing <em>and therefore customers pay us a price premium</em>"</div></div>
-      <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs"><div className="bg-purple-100 rounded p-2"><strong>Individual</strong> A, R, or K</div><div className="bg-purple-200 rounded p-2"><strong>Combinations</strong> of A+R+K</div><div className="bg-purple-300 rounded p-2"><strong>Systems</strong> (hardest to imitate)</div></div>
-    </Card>
-    <Card title="Time Dimension (Ch.3)" cn="策略的時間面向" color="cyan">
-      <div className="grid grid-cols-3 gap-2 text-xs">
-        {[{t:"Commitment",d:"Large investment → long-term advantage",ex:"Chemicals, pharma, oil, mining"},{t:"Hustle",d:"Stream of temporary advantages, move fast",ex:"Motion pictures, fashion, trading, some tech"},{t:"Real Options",d:"Stay in game without big commitment",ex:"High uncertainty + irreversibility"}].map(s=>(<div key={s.t} className="bg-white border rounded p-3"><div className="font-bold text-cyan-700">{s.t}</div><div className="mt-1">{s.d}</div><div className="mt-1 text-slate-500 italic">{s.ex}</div></div>))}
-      </div>
-      <div className="mt-2 text-xs text-slate-500"><strong>Time pacing:</strong> New products on set schedule. Fashion 2x/yr; PC every 6 mo.</div>
-    </Card>
-    <Card title="General vs. Specific Competitive Advantages (Ch.3)" cn="一般性 vs. 特定性競爭優勢" color="amber">
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        <div className="bg-amber-50 border rounded p-3"><div className="font-bold text-amber-700 mb-1">General 一般性</div><div>Built up over time: R&D capabilities, brands, manufacturing excellence.</div></div>
-        <div className="bg-amber-50 border rounded p-3"><div className="font-bold text-amber-700 mb-1">Specific 特定性</div><div>Why the company succeeds or fails TODAY in a specific industry, with specific customers, against specific competitors.</div></div>
-      </div>
-      <div className="mt-2 text-xs text-center">Hustle strategy = generating general advantages to produce the stream of specific advantages needed to compete immediately.</div>
-    </Card>
-    <Card title="Scope Combinations (Ch.3, Fig 3.1)" cn="範疇組合矩陣" color="slate">
-      <div className="grid grid-cols-2 gap-3"><div className="grid grid-cols-2 gap-1 text-xs">{["Local Diversifier","Global Diversifier","Local Specialist","Global Specialist"].map(s=>(<div key={s} className="bg-slate-100 border rounded p-2 text-center">{s}</div>))}</div><div className="grid grid-cols-2 gap-1 text-xs">{["Local Broadline","Global Broadline","Local Focus","Global Focus"].map(s=>(<div key={s} className="bg-slate-100 border rounded p-2 text-center">{s}</div>))}</div></div>
-      <div className="mt-2 text-xs text-slate-500">No single right scope. Optimal depends on industry, geography, and firm strategy.</div>
-    </Card>
-    <Card title="Activities & Resources Lists (Lecture Ch.3)" cn="活動與資源清單" color="green">
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        <div><div className="font-semibold text-green-700 mb-1">Activities 活動:</div><div className="flex flex-wrap gap-1">{["Product/Service Dev","Production","Logistics","Sales & Marketing","Customer Service","Accounting","Finance","HR Management","Strategy Setting"].map(a=>(<span key={a} className="bg-green-50 border border-green-200 rounded px-1.5 py-0.5">{a}</span>))}</div></div>
-        <div><div className="font-semibold text-green-700 mb-1">Resources 資源:</div><div className="flex flex-wrap gap-1">{["Natural Resources","Financial Resources","Human Resources","Physical Assets","Locations","Patents","Brands","Reputation","Org Resources"].map(r=>(<span key={r} className="bg-green-50 border border-green-200 rounded px-1.5 py-0.5">{r}</span>))}</div></div>
-      </div>
-    </Card>
-    <Card title="Signals of Value (Ch.3)" cn="價值訊號——影響顧客願付價格" color="rose">
-      <div className="flex flex-wrap gap-1 text-xs">{["Brands","Installed base / existing customers","Celebrity endorsements","Awards (industry, trade)","Independent certification (ISO, etc.)","Price as signal of quality","Customer education"].map(s=>(<span key={s} className="bg-rose-50 border border-rose-200 rounded px-2 py-1">{s}</span>))}</div>
-      <div className="mt-2 text-xs text-slate-500">Price can signal exclusivity — raising price can sometimes increase sales (e.g., NZ wine, luxury goods).</div>
-    </Card>
-  </div>);
-}
-
-function IndustryTab() {
-  return (<div>
-    <SectionTitle cn="產業層級分析——互動圖表 + 詳細參考">Industry-Level Analysis (Ch.4)</SectionTitle>
-    <InteractiveWhatIsIndustry />
-    <InteractiveIndustryDetail />
-    <InteractiveCompetition />
-
-    {/* ★ NEW: Industry Economics dynamic analysis */}
-    <InteractiveIndustryEconomics />
-
-    <div className="mt-2 mb-3 text-center"><span className="text-xs font-bold text-slate-400 uppercase tracking-widest">▼ Detailed Reference 詳細參考 ▼</span></div>
-
-    <Card title="Industry Definition — CRITICAL" cn="產業定義——極為關鍵" color="red">
-      <div className="bg-white border-2 border-red-300 rounded-lg p-4 text-center mb-3">
-        <div className="font-bold text-red-700 mb-2">Products/services with SIMILAR FORM AND FUNCTION in DIRECT COMPETITION</div>
-        <div className="text-xs text-slate-600">Focus on "useful output" to customers. NOT statistical codes. Boundaries shift.</div>
-      </div>
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="bg-green-50 border border-green-300 rounded p-2">✓ iPhone + Android = same industry (smartphones — same useful output)</div>
-        <div className="bg-red-50 border border-red-300 rounded p-2">✗ Amazon + Microsoft + Meta ≠ same industry (different primary outputs)</div>
-      </div>
-    </Card>
-    <Card title="Conditions for Perfect Competition" cn="完全競爭條件（偏離即解釋利潤）" color="slate">
-      <div className="grid grid-cols-2 gap-1 text-xs">{["No entry/exit barriers","Homogeneous products","No brands","No scale/scope/learning economies","No preferential relationships","No informational asymmetries","No transportation costs","No collusion"].map(c=>(<div key={c} className="flex items-center gap-1"><span className="text-red-500">✗</span> {c}</div>))}</div>
-      <div className="mt-2 text-xs font-semibold text-center">Departures from these conditions → explain why profits exist</div>
-    </Card>
-    <Card title="Barriers to Entry & Exit (Ch.4)" cn="進入與退出障礙——利潤差異持續的原因" color="purple">
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        <div><div className="font-semibold text-purple-700 mb-1">Entry Barriers 進入障礙:</div><ul className="space-y-0.5 list-disc list-inside"><li>Economies of scale, learning, scope</li><li>Brands and differentiation</li><li>Patents and government regulation</li><li>Access to inputs or distribution</li><li>Expected retaliation from incumbents</li></ul></div>
-        <div><div className="font-semibold text-purple-700 mb-1">Exit Barriers 退出障礙:</div><ul className="space-y-0.5 list-disc list-inside"><li>Specialized assets</li><li>Strategic barriers (exit hurts another business)</li><li>Emotional barriers</li><li>Large costs of exiting</li></ul></div>
-      </div>
-      <div className="mt-2 bg-purple-50 border border-purple-300 rounded p-2 text-xs text-center font-semibold">"Barriers to entry and exit allow differences in the profitability of industries to persist" (Ch.4 Takeaway)</div>
-    </Card>
-    <Card title="Table 4.3: Features by Competition Type (Ch.4)" cn="各競爭型態的特徵對照" color="slate">
-      <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="bg-slate-100"><th className="text-left p-1">Feature</th><th className="p-1">Subsidized</th><th className="p-1">Perfect</th><th className="p-1">Hyper</th><th className="p-1">Oligopoly</th><th className="p-1">Monopoly</th></tr></thead>
-      <tbody className="divide-y">{[["Entry","Subsidized","Free","Feasible","Limited","No entry"],["Products","Inferior may succeed","Homogeneous","Distinguishable briefly","Distinguishable long","Unique"],["Brands","Subsidies overcome","None","Temporary","Sustained","Unique"],["Scale/Scope/Learning","Subsidies overcome","None","Limited","Potentially large","Very large"],["Customer relations","Subsidies overcome","None","Temporary adv.","Sustained adv.","Exclusive"],["Info asymmetries","Subsidies overcome","None","Temporary","Sustained","Complete"],["Collusion","Not specified","None","Little","Possible","Total"],["Profit","Very low","Low","Low-moderate","Pot. high sustained","High sustained"]].map(([f,...vs])=>(<tr key={f}><td className="p-1 font-semibold">{f}</td>{vs.map((v,i)=><td key={i} className="p-1 text-center">{v}</td>)}</tr>))}</tbody></table></div>
-    </Card>
-    <Card title="Competitor Envelope Analysis — CEA (Ch.4)" cn="競爭者包絡線分析" color="rose">
-      <div className="text-xs mb-2">Assess competitors as they <strong>might be</strong>, not just as they are today. "They do strategy too."</div>
-      <div className="grid grid-cols-2 gap-1 text-xs">{["What if competitors optimized their activities?","What if they fully leveraged resources & knowledge?","What if they overcame strategic shortcomings?","What if taken over by savvy, deep-pocketed firms?","What would WE do if we managed the competitors?","Also: look for unmet demand / underserved segments"].map(q=>(<div key={q} className="bg-rose-50 border rounded p-1.5">{q}</div>))}</div>
-    </Card>
-    <Card title="Competition on Quality vs. Price (Lecture Ch.4)" cn="品質競爭 vs. 價格競爭" color="green">
-      <div className="text-xs text-center font-semibold">"Competition based on quality, features, etc. generally leads to better industry profitability than competition solely on price."</div>
-    </Card>
-  </div>);
-}
-
-function MesoCluster() {
-  return (<div>
-    <SectionTitle cn="群聚／中觀層級">Meso / Cluster Level (Ch.5)</SectionTitle>
-    <Card title='This level is "often missed in strategic analyses" (Ch.2)' cn="此層「在策略分析中常被遺漏」" color="amber"><div className="text-xs">A distinct source of performance involving suppliers, customers, related industries, spillovers, complementarities, substitutes, shared resources/activities.</div></Card>
-    <div className="grid grid-cols-2 gap-3 mb-4">
-      <div className="bg-green-50 border-2 border-green-400 rounded-lg p-4"><div className="font-bold text-green-700 text-center mb-2">Complementarities 互補</div><div className="text-center text-2xl mb-2">📈</div><div className="text-xs space-y-1"><div>→ <strong>EXPAND</strong> demand 擴張需求</div><div>→ Make focal product more valuable</div><div>→ Create shared efficiencies</div></div></div>
-      <div className="bg-red-50 border-2 border-red-400 rounded-lg p-4"><div className="font-bold text-red-700 text-center mb-2">Substitutes 替代</div><div className="text-center text-2xl mb-2">📉</div><div className="text-xs space-y-1"><div>→ <strong>CONTRACT</strong> demand 壓縮需求</div><div>→ Replace <strong>function</strong>, not just form</div><div>→ Compete for customer's <strong>time or money</strong></div></div></div>
-    </div>
-    <Card title="Bargaining Power Framework" cn="議價力框架（買方與供應商）" color="blue">
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        <div><div className="font-semibold text-blue-700 mb-1">Intrinsic Bargaining Strength:</div><ul className="space-y-0.5 list-disc list-inside"><li>Concentration</li><li>Volume of purchases</li><li>Availability of substitutes</li><li>Switching costs</li><li>Vertical integration threat</li><li>Pull-through to end-user</li></ul></div>
-        <div><div className="font-semibold text-blue-700 mb-1">Price Sensitivity:</div><ul className="space-y-0.5 list-disc list-inside"><li>Cost / total purchases</li><li>Strategy and positioning</li><li>Buyer/supplier profitability</li><li>Impact on quality / performance</li></ul></div>
-      </div>
-    </Card>
-    <Card title="Business Ecosystem Warning (Lecture Ch.5 Part 2)" cn="商業生態系警告" color="red">
-      <div className="bg-red-100 border border-red-300 rounded p-3 text-center">
-        <div className="font-bold text-red-800 text-sm">Where is value GENERATED, APPROPRIATED, and DEFENDED?</div>
-        <div className="text-xs text-red-700 mt-1">價值在哪裡被創造、攫取、守住？</div>
-        <div className="text-xs text-slate-600 mt-2">"Asset light" and ecosystem strategies can be dangerous if firms don't understand this.</div>
-      </div>
-    </Card>
-    <Card title={'"It\'s a Wonderful Life" Test'} cn="如果這個角色不存在，世界會如何？" color="purple"><div className="text-xs">Imagine removing a player from the ecosystem. If the industry/firm would be significantly worse off without them, that player has substantial power. If the industry barely notices, they do not.</div></Card>
-    <Card title='"When Will Buyers Get the Value?"' cn="買方何時會取得價值？" color="amber">
-      <div className="text-xs space-y-1"><div>→ When we do NOT bring substantial value to the table</div><div>→ When we do NOT bring something unique</div><div>→ When the pie WITH us is not much higher than WITHOUT us</div><div>→ When we need them more than they need us</div><div>→ When they can demand a price decrease and we cannot resist</div><div>→ Buyer industry far from perfect competition → buyers have power</div><div>→ Buyer industry close to perfect competition → buyers have little power</div></div>
-      <div className="mt-2 text-xs text-slate-500 italic">Same logic applies in reverse for supplier power.</div>
-    </Card>
-    <Card title="Meso Driver Checklist" cn="Meso driver 清單" color="cyan"><div className="grid grid-cols-2 gap-1 text-xs">{["Demand & Customers","Inputs & Suppliers","Shared Resources","Shared Activities","Complementarities","Substitutes","Meso Policies","Meso Institutions"].map(d=>(<div key={d} className="bg-white border rounded p-2 text-center">{d}</div>))}</div></Card>
-  </div>);
-}
-
-function MacroMeta() {
-  return (<div>
-    <SectionTitle cn="國家層級與超國家層級">Macro & Meta Levels (Ch.6–Ch.7)</SectionTitle>
-    <Card title="MACRO / NATIONAL (Ch.6)" cn="國家層級" color="blue">
-      <div className="grid grid-cols-2 gap-2 mb-3">{[{t:"Macroeconomics",d:"Demand, fiscal, inflation, rates, exchange, unemployment"},{t:"Gov't Policies",d:"Monetary, fiscal, tax, industrial, trade, education, S&T, competition, IP, regulatory"},{t:"Institutions",d:"Design (policy bureaus) · Support (education, research) · Governance (legal, regulatory, admin)"},{t:"Civil Society",d:"Social structures, attitudes, cultural attributes, stability"}].map(x=>(<div key={x.t} className="bg-blue-50 border rounded p-3"><div className="font-bold text-blue-700 text-sm">{x.t}</div><div className="text-xs text-slate-600 mt-1">{x.d}</div></div>))}</div>
-      <div className="bg-amber-50 border border-amber-300 rounded p-3 text-xs"><strong>Ch.6 Lecture Notes:</strong> Look at <Tag color="amber">Levels</Tag> <Tag color="amber">Trends</Tag> <Tag color="amber">Disruption</Tag> <Tag color="amber">Non-linear change</Tag></div>
-      <div className="mt-2 text-xs text-slate-500"><strong>Two-edged sword:</strong> Good macro helps all firms; some firms profit from frictions in weak environments.</div>
-    </Card>
-    <Card title="META / SUPRANATIONAL (Ch.7)" cn="超國家層級" color="purple"><div className="grid grid-cols-3 gap-1 text-xs mb-3">{["Geopolitics","Global Technology","Global Economics","Social & Environmental","Multilateral Orgs (WTO, WB, IMF)","Trade Blocs (EU, USMCA, RCEP)","Foreign Governments","Int'l Financial Flows (FDI, portfolio)","Foreign MNCs","Other Groups (NGOs)"].map(d=>(<div key={d} className="bg-purple-50 border rounded p-2 text-center">{d}</div>))}</div></Card>
-    <Card title="Writing Standard for Macro & Meta" cn="作答標準" color="red">
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        <div className="bg-red-50 border border-red-300 rounded p-3"><div className="font-bold text-red-700 mb-1">DO NOT write ✗</div><div>"The economy was bad"</div><div>"Geopolitics mattered"</div></div>
-        <div className="bg-green-50 border border-green-300 rounded p-3"><div className="font-bold text-green-700 mb-1">DO write ✓</div><div>Show <strong>transmission mechanism</strong>: HOW it reaches demand, cost, inputs, finance, regulation, bargaining power, strategic room</div></div>
-      </div>
-    </Card>
-  </div>);
-}
-
-function VrioArk() {
-  return (<div>
-    <SectionTitle cn="Q2 準備：VRIO 延伸到 ARK">Q2: VRIO Extended to ARK in SPARK</SectionTitle>
-    <Card title="VRIO Framework (extended)" cn="VRIO 架構（本課延伸版）" color="purple">
-      <div className="grid grid-cols-4 gap-2 mb-3">{[{l:"V",w:"aluable",d:"Improves WTP or lowers cost vs. competitors"},{l:"R",w:"are",d:"Few firms control it"},{l:"I",w:"nimitable",d:"Costly for others to obtain"},{l:"O",w:"rganized",d:"Firm captures value from it"}].map(v=>(<div key={v.l} className="bg-purple-50 border-2 border-purple-300 rounded-lg p-3 text-center"><div className="text-2xl font-black text-purple-700">{v.l}</div><div className="text-xs font-semibold">{v.l}{v.w}</div><div className="text-xs text-slate-600 mt-1">{v.d}</div></div>))}</div>
-      <div className="bg-purple-100 border border-purple-300 rounded p-2 text-center text-sm font-semibold">In STRT 6200: VRIO applies to <Tag color="purple">Resources</Tag> <strong>AND</strong> <Tag color="purple">Activities</Tag> <strong>AND</strong> <Tag color="purple">Knowledge</Tag> = the <strong>ARK in SPARK</strong></div>
-    </Card>
-    <Card title="Q2A: Home Alone — Professor's Own Answer" cn="教授本人的答案框架（Lecture Notes Ch.5 Part 1, slide 20）" color="green">
-      <div className="text-xs text-green-700 font-semibold mb-3 text-center">✅ VERIFIED: Lecture Notes Ch.5 Part 1, slide 20</div>
-      <div className="space-y-3">
-        {[{m:"Home Alone 1",pay:"$100K",sc:"THE PART",bg:"bg-blue-50 border-blue-300",logic:"Scarce commodity = the role itself. Actor unproven. Talent not yet V-R-I. Studio bears risk. Low bargaining power."},{m:"Home Alone 2",pay:"$13.7M",sc:"THE KID",bg:"bg-green-50 border-green-300",logic:"Scarce commodity = Culkin himself. After hit: V (proven revenue), R (only one Culkin), I (emotional bond irreplaceable). Studio Organized via sequel. Full VRIO → resource holder appropriates value."},{m:"Home Alone 3",pay:"$0",sc:"THE FRANCHISE",bg:"bg-amber-50 border-amber-300",logic:"Scarce commodity = the franchise brand itself. Actor substitutable at high price. VRIO resource has a max price. Franchise > any single actor."}].map(h=>(<div key={h.m} className={`border-2 ${h.bg} rounded-lg p-4`}><div className="flex items-center justify-between mb-2"><div className="font-bold text-lg">{h.m}</div><div className="font-bold text-lg">{h.pay}</div></div><div className="bg-white rounded px-3 py-2 text-center mb-2"><span className="text-xs text-slate-500">Scarce commodity:</span><span className="font-black text-lg ml-2">{h.sc}</span></div><div className="text-xs text-slate-700">{h.logic}</div></div>))}
-      </div>
-      <div className="mt-3 bg-blue-50 border border-blue-200 rounded p-2 text-xs"><strong>Jennifer Lawrence parallel (slide 21):</strong> Hunger Games $500K → HG2 $10M → HG3+4 >$40M. Same VRIO escalation.</div>
-      <div className="mt-2 text-xs font-semibold text-center">Key insight: What is "scarce" SHIFTS over time. VRIO is dynamic. Bargaining power follows scarcity.</div>
-    </Card>
-    <Card title="Q2B: Natalie Portman — Three-Picture Deal" cn="問的是外部影響工具" color="blue">
-      <div className="text-xs space-y-2"><div className="flex items-start gap-2"><Tag color="amber">Micro</Tag> <span>Film industry: after franchise success, actor's resource becomes VRIO → compensation escalates</span></div><div className="flex items-start gap-2"><Tag color="cyan">Meso</Tag> <span>Bargaining escalation is structural in entertainment</span></div><div className="flex items-start gap-2"><Tag color="green">Logic</Tag> <span>Lucas Films locked Portman in BEFORE she became identified with Queen Amidala = <strong>forward contract</strong> on potentially-VRIO resource.</span></div></div>
-    </Card>
-    <Card title="Q2C: Hollywood Flops — Limits of VRIO" cn="VRIO 的侷限" color="red">
-      <div className="space-y-2 text-xs">{[["1","VRIO necessary but not sufficient","Great actor + bad script = flop. Activity system matters as much as resources."],["2",'"O" is where flops happen',"Studios have VRIO resources but fail to Organize. Bad decisions = organizational failure."],["3","Demand uncertainty = industry characteristic","Audience demand fundamentally unpredictable. No resource eliminates this."],["4","Resources not automatically synergistic","Multiple VRIO resources combined ≠ guaranteed value for customers."],["5","VRIO explains portfolios, not singles","Disney avg = more hits than misses. John Carter failing ≠ VRIO disproved."]].map(([n,t,d])=>(<div key={n} className="flex items-start gap-2"><div className="bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0">{n}</div><div><strong>{t}.</strong> {d}</div></div>))}</div>
-    </Card>
-  </div>);
-}
-
-function EtaSwatch() {
-  return (<div>
-    <SectionTitle cn="Q3 準備：ETA / Swatch">Q3: ETA / Swatch Group</SectionTitle>
-    <Card title="Key Facts to Know Cold" cn="必背事實" color="blue">
-      <div className="grid grid-cols-2 gap-2 text-xs">{[["New movement","5 years + CHF 10M"],["ETA position","Dominant in Swiss market"],["Forced to supply","By Swiss Competition Commission (1990s)"],["Swatch investment","Billions of CHF expanding ETA"],["Hayek quote","Like BMW supplying engines to Audi & Mercedes"],["Pricing","ETA not allowed to raise prices without authority permission"],["Phase-out timeline","ébauches → 2008 no reduction → 2011; movements → 85% of 2010 by 2012; 50% of 2013 levels gradual"],["Rivals responded","Cloned (patents expired) or developed own capacity"],["ETA share by 2019","33%"],["Critical final fact","Movements MORE CONCENTRATED than watches"]].map(([k,v])=>(<div key={k} className="bg-blue-50 border rounded p-2"><div className="font-semibold text-blue-700">{k}</div><div className="text-slate-700">{v}</div></div>))}</div>
-    </Card>
-    <Card title="ETA Timeline" cn="時間軸" color="slate">
-      <div className="relative"><div className="absolute left-3 top-0 bottom-0 w-0.5 bg-slate-300"></div><div className="space-y-3 ml-8">{[["1990s","Commission rules: ETA must supply any Swiss firm","red"],["2000","New movement estimate: 5yr + CHF 10M","blue"],["2002–05","Swatch tries to phase out ébauche sales","amber"],["2008","Forced to keep supplying, no quantity reduction","red"],["2011","Allowed to stop ébauches","amber"],["2012","Movements reduced to 85% of 2010","amber"],["2013","Gradual reduction to 50% of 2013 volumes","amber"],["2019","ETA share = 33%; rivals have own capacity","green"],["Dec 2019","Commission: stop supplying","red"],["Jul 2020","Reversed: ETA free to sell or not","green"]].map(([yr,ev,c])=>(<div key={yr} className="flex items-start gap-2 relative"><div className={`absolute -left-8 w-4 h-4 rounded-full border-2 ${c==='red'?'bg-red-400 border-red-600':c==='green'?'bg-green-400 border-green-600':c==='amber'?'bg-amber-400 border-amber-600':'bg-blue-400 border-blue-600'}`}></div><div><span className="font-bold text-xs">{yr}:</span><span className="text-xs ml-1">{ev}</span></div></div>))}</div></div>
-    </Card>
-    <div className="grid grid-cols-2 gap-3 mb-4">
-      <Card title="A. Why limit sales?" color="red"><div className="text-xs space-y-1"><div>→ Raise rivals' costs (5yr + CHF 10M barrier)</div><div>→ Stop subsidizing competitors</div><div>→ Fewer competitors → less rivalry → higher Swatch brand profits</div><div>→ ETA shifts from regulated utility to proprietary advantage</div></div></Card>
-      <Card title="B. Why continue selling?" color="green"><div className="text-xs space-y-1"><div>→ Amortize massive fixed costs; achieve scale</div><div>→ Maintain competitor dependency</div><div>→ Revenue stream may exceed competitive cost</div><div>→ Avoid further antitrust fines</div></div></Card>
-      <Card title="C. Commission impact?" color="amber"><div className="text-xs space-y-1"><div>→ Lowered entry barriers → more competitors</div><div>→ Shifted competition: manufacturing → brand/design/marketing</div><div>→ Stimulated alternative development (cloning, self-dev)</div><div>→ Likely reduced avg profitability in assembly/branding</div></div></Card>
-      <Card title="D. Movement vs Watch economics?" color="purple"><div className="text-xs space-y-1"><div><strong>Movements:</strong> High fixed cost, massive scale → few firms → oligopoly</div><div><strong>Watches:</strong> Brand differentiation, many segments → many firms → segmented</div><div className="font-semibold mt-1">Core: Movement economics → natural concentration. Watch economics → natural fragmentation.</div></div></Card>
-    </div>
-    <Card title="Movement vs Watch Economics Comparison" color="slate">
-      <table className="w-full text-xs"><thead><tr><th className="text-left pb-1"></th><th className="text-left pb-1 text-blue-700">Movements 機芯</th><th className="text-left pb-1 text-amber-700">Watches 手錶</th></tr></thead>
-      <tbody className="divide-y">{[["Scale economies","Very high (5yr, CHF 10M; billions invested)","Lower (assembly/branding at smaller scale)"],["Entry barriers","Very high","Lower with movement access"],["Viable firms","Few → oligopoly","Many → segmented competition"],["Value capture","Manufacturing efficiency + scarcity","Brand + design + customer relationships"]].map(([f,m,w])=>(<tr key={f}><td className="py-1 pr-2 font-semibold">{f}</td><td className="py-1 pr-2">{m}</td><td className="py-1">{w}</td></tr>))}</tbody></table>
-    </Card>
-  </div>);
-}
-
-function CramSheet() {
-  return (<div>
-    <SectionTitle cn="考前速記＋最終確認">Cram Sheet & Final Checklist</SectionTitle>
-    <div className="bg-slate-900 text-white rounded-xl p-5 mb-4">
-      <div className="text-center font-bold text-xl mb-4 text-yellow-300">17 THINGS TO KNOW COLD</div>
-      <div className="space-y-2">
-        {[["1","Performance is RELATIVE","績效是相對的","blue"],["2","Comprehensive, integrative, dynamic, question-based","全面、整合、動態、問題導向","blue"],["3","Five levels: Industry → Meso → Macro → Meta → Firm","分析順序：產業→群聚→國家→超國家→企業","blue"],["4","Levels AND trends","水準與趨勢","blue"],["5","Industry = useful output to customer + direct competition","產業＝客戶收到的有用輸出＋直接競爭","amber"],["6","Full positioning = price AND cost","完整定位＝價格加成本","green"],["7","SPARK: Scope, Positioning, Activities, Resources, Knowledge","SPARK","green"],["8","VRIO extends to ARK in SPARK","VRIO延伸到SPARK中的ARK","purple"],["9","Complementors EXPAND; substitutes CONTRACT demand","互補擴張，替代壓縮","cyan"],["10","Ecosystems: where is value generated, appropriated, defended?","價值在哪裡創造、攫取、守住？","red"],["11","Macro: levels, trends, disruption, non-linearity","總體：水準、趨勢、衝擊、非線性","blue"],["12","Q2 Home Alone: THE PART → THE KID → THE FRANCHISE","","green"],["13","Q3 ETA: 5yr, CHF 10M, 33% by 2019, movements more concentrated","","amber"],["14","Barriers to entry/exit allow profit differences to PERSIST","進入退出障礙使利潤差異持續","purple"],["15","Industry Economics: WHY possible, WHERE from, WHAT shifts it","產業經濟：為何有可能、來源、何時變動","rose"],["16","General vs. Specific advantages → explains hustle logic","一般性 vs. 特定性優勢","cyan"],["17",'"It\'s a Wonderful Life" test: remove a player, does it matter?',"移除一個角色，會有影響嗎？","purple"]].map(([n,en,cn,c])=>{
-          const colors={blue:"bg-blue-800",green:"bg-green-800",amber:"bg-amber-800",purple:"bg-purple-800",red:"bg-red-800",cyan:"bg-cyan-800",rose:"bg-rose-800"};
-          return(<div key={n} className={`${colors[c]} rounded-lg px-4 py-2 flex items-center gap-3`}><div className="bg-white text-slate-900 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0">{n}</div><div className="flex-1"><span className="font-semibold text-sm">{en}</span>{cn&&<span className="text-xs text-slate-300 ml-2">{cn}</span>}</div></div>);
-        })}
-      </div>
-    </div>
-    <Card title="Mistakes That Cost Points" cn="最容易失分的錯誤" color="red">
-      <div className="grid grid-cols-2 gap-2 text-xs">{["Industry by tech, not useful output","Performance as absolute, not relative","Static analysis, no trends","Levels listed without HOW/WHY mechanism","Meso confused with micro",'"Better resources" without WTP/cost effect',"Positioning from price alone or cost alone","Industry economics as static snapshot, not dynamic structure"].map(m=>(<div key={m} className="flex items-start gap-1"><span className="text-red-500 flex-shrink-0">✗</span><span>{m}</span></div>))}</div>
-    </Card>
-    <Card title="Final 60-Minute Review Plan" cn="考前最後60分鐘複習計劃" color="green">
-      <div className="space-y-3">{[{t:"0–15 min",a:"MEMORIZE",d:"17 items above. Performance is relative. Five levels + drivers. SPARK. ARK in SPARK. Price + cost. Complements vs substitutes."},{t:"15–30 min",a:"WRITE FROM MEMORY",d:"Five levels + all drivers. Competition spectrum. Macro institutions (design/support/governance). Home Alone: part/kid/franchise. ETA: 5yr/10M/33%/more concentrated."},{t:"30–45 min",a:"PRACTICE 3 MINI-ANSWERS",d:"One Five-Level answer. One VRIO/ARK answer. One ETA answer. Each 6–8 sentences."},{t:"45–60 min",a:"CHECK ONLY TWO THINGS",d:"Did I explain HOW? Did I explain WHY?"}].map(p=>(<div key={p.t} className="bg-green-50 border border-green-200 rounded-lg p-3"><div className="flex items-center gap-2 mb-1"><Tag color="green">{p.t}</Tag><span className="font-bold text-green-800 text-sm">{p.a}</span></div><div className="text-xs text-slate-700">{p.d}</div></div>))}</div>
-    </Card>
-    <Card title="Final Checklist" cn="最後確認清單" color="amber">
-      <div className="space-y-2 text-xs">{["Identify 3 more cases from Sessions 1–8 for Q1 (biggest gap)","Prepare for unknown Q4 (Five Levels + SPARK on unfamiliar scenario)","Verify Seiko details against your own case copy","Write from memory: five levels + drivers + SPARK + competition types + HA sequence + ETA facts","Practice 3 mini-answers (one per question type)","Every answer: HOW? and WHY?"].map((c,i)=>(<div key={i} className="flex items-start gap-2"><div className="w-4 h-4 border-2 border-amber-400 rounded flex-shrink-0 mt-0.5"></div><span>{c}</span></div>))}</div>
-    </Card>
-    <div className="bg-slate-100 rounded-lg p-4 text-center">
-      <div className="font-bold text-slate-800 text-sm mb-1">The reflex to bring into the exam room:</div>
-      <div className="text-slate-700 text-sm"><strong>Identify the level → Identify the driver → Explain the mechanism → Judge the performance effect</strong></div>
-      <div className="text-xs text-slate-500 mt-1">先判斷層級 → 再抓 driver → 再寫作用機制 → 最後判斷對績效的影響</div>
-    </div>
-    <div className="mt-4 text-xs text-slate-400 text-center">All framework content verified against Ch.1–Ch.7, lecture notes, practice exam. Home Alone from Lecture Notes Ch.5 Part 1 slide 20. Interactive diagrams: Enright 2021. No external sources.</div>
-  </div>);
-}
-
-const tabContent = {"Overview":Overview,"Five Levels":FiveLevels,"SPARK & Position":SparkPosition,"Industry":IndustryTab,"Meso/Cluster":MesoCluster,"Macro & Meta":MacroMeta,"Q2: VRIO/ARK":VrioArk,"Q3: ETA/Swatch":EtaSwatch,"Cram Sheet":CramSheet};
-
-export default function App() {
-  const [tab, setTab] = useState("Overview");
-  const Content = tabContent[tab];
+function Surface({ children, className = "", style = {} }) {
   return (
-    <div className="bg-white min-h-screen">
-      <div className="bg-slate-900 text-white px-4 py-3">
-        <div className="text-lg font-bold">STRT 6200 Midterm Study Guide</div>
-        <div className="text-xs text-slate-400">Enhanced Edition · March 11, 2026 · Closed Book</div>
+    <div className={cn("rounded-[24px] border shadow-sm", className)} style={{ background: theme.card, borderColor: theme.line, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function Bilingual({ mode, zh, en, className = "" }) {
+  if (mode === "zh") return <div className={className}>{zh}</div>;
+  if (mode === "en") return <div className={className}>{en}</div>;
+  return (
+    <div className={className}>
+      <div>{zh}</div>
+      <div className="mt-1 text-[#5E564F]">{en}</div>
+    </div>
+  );
+}
+
+function Pill({ children, tone = "default" }) {
+  const t = cardTone(tone);
+  return (
+    <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold" style={{ background: t.bg, color: t.text }}>
+      {children}
+    </span>
+  );
+}
+
+function SectionTitle({ mode, kickerZh, kickerEn, titleZh, titleEn }) {
+  return (
+    <div className="mb-5">
+      <div className="mb-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]" style={{ background: theme.warm, color: theme.deep }}>
+        <span>{kickerZh}</span>
+        {mode === "both" && <><span className="opacity-50">/</span><span>{kickerEn}</span></>}
       </div>
-      <div className="overflow-x-auto border-b bg-slate-50">
-        <div className="flex min-w-max">{tabs.map(t=>(<button key={t} onClick={()=>setTab(t)} className={`px-3 py-2 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${tab===t?"border-blue-600 text-blue-700 bg-white":"border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100"}`}>{t}</button>))}</div>
+      <h2 className="text-2xl font-semibold md:text-3xl" style={{ color: theme.ink }}>
+        {mode === "en" ? titleEn : titleZh}
+      </h2>
+      {mode === "both" && <p className="mt-1 text-sm md:text-base" style={{ color: theme.muted }}>{titleEn}</p>}
+    </div>
+  );
+}
+
+function ReadingSettings({ mode, setMode, compact, setCompact }) {
+  const [open, setOpen] = useState(false);
+  const options = [
+    { id: "both", label: "雙語 / Bilingual" },
+    { id: "zh", label: "中文" },
+    { id: "en", label: "English" },
+  ];
+
+  return (
+    <div className="fixed bottom-5 right-5 z-30 md:bottom-6 md:right-6">
+      <div className="relative">
+        {open && (
+          <div className="absolute bottom-14 right-0 rounded-[24px] border p-3 shadow-lg" style={{ width: "min(240px, calc(100vw - 2.5rem))", background: theme.card, borderColor: theme.line }}>
+            <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: theme.deep }}>
+              Reading settings
+            </p>
+            <div className="space-y-1">
+              {options.map((opt) => {
+                const active = mode === opt.id;
+                return (
+                  <button key={opt.id} type="button" onClick={() => setMode(opt.id)} className="flex w-full items-center justify-between rounded-2xl px-3 py-3 text-sm" style={{ background: active ? theme.warm : "transparent", color: theme.ink }}>
+                    <span>{opt.label}</span>
+                    {active && <span>✓</span>}
+                  </button>
+                );
+              })}
+              <button type="button" onClick={() => setCompact((v) => !v)} className="flex w-full items-center justify-between rounded-2xl px-3 py-3 text-sm" style={{ background: compact ? theme.warm : "transparent", color: theme.ink }}>
+                <span>精簡模式 / Compact tables</span>
+                <span>{compact ? "✓" : "+"}</span>
+              </button>
+            </div>
+          </div>
+        )}
+        <button type="button" onClick={() => setOpen((v) => !v)} className="inline-flex h-12 w-12 items-center justify-center rounded-full border shadow-md" style={{ background: theme.deep, borderColor: theme.deep, color: "#FFFDF8" }} aria-label="Open reading settings">
+          ⚙
+        </button>
       </div>
-      <div className="p-4 max-w-3xl mx-auto"><Content /></div>
+    </div>
+  );
+}
+
+function MobileInfoCards({ mode, rows, type = "field" }) {
+  return (
+    <div className="space-y-3 md:hidden">
+      {rows.map((row) => (
+        <Surface key={type === "field" ? row.field : row.label} className="p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="break-words font-semibold leading-6">
+                {type === "field" ? row.field : mode === "en" ? row.labelEn : row.label}
+              </p>
+              {mode === "both" && type !== "field" && <p className="mt-1 break-words text-sm text-[#7A6E64]">{row.labelEn}</p>}
+            </div>
+            {type === "field" ? <Pill tone={row.risk === "high" ? "red" : row.risk === "medium" ? "amber" : "green"}>{row.risk}</Pill> : <Pill tone={row.result === "update" ? "green" : "red"}>{row.result === "update" ? "Update" : "Reapply"}</Pill>}
+          </div>
+          <Bilingual mode={mode} className="mt-3 text-sm leading-7" zh={<p>{row.zh}</p>} en={<p>{row.en}</p>} />
+        </Surface>
+      ))}
+    </div>
+  );
+}
+
+function DesktopFieldTable({ mode, compact }) {
+  const showEnglish = mode === "both" && !compact;
+  return (
+    <Surface className="hidden overflow-hidden md:block">
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-left text-sm">
+          <thead style={{ background: theme.warm }}>
+            <tr>
+              <th className="px-4 py-4 font-semibold md:px-6">Field</th>
+              <th className="px-4 py-4 font-semibold md:px-6">{mode === "en" ? "Primary note" : "中文重點"}</th>
+              {showEnglish && <th className="px-4 py-4 font-semibold md:px-6">English note</th>}
+              <th className="px-4 py-4 font-semibold md:px-6">Risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            {fieldGuide.map((row, i) => (
+              <tr key={row.field} className={i % 2 === 0 ? "" : "bg-[#FFFEFB]"} style={{ borderTop: `1px solid ${theme.line}` }}>
+                <td className="px-4 py-4 align-top font-medium md:px-6">{row.field}</td>
+                <td className="px-4 py-4 align-top leading-7 md:px-6">{mode === "en" ? row.en : row.zh}</td>
+                {showEnglish && <td className="px-4 py-4 align-top leading-7 text-[#5E564F] md:px-6">{row.en}</td>}
+                <td className="px-4 py-4 align-top md:px-6"><Pill tone={row.risk === "high" ? "red" : row.risk === "medium" ? "amber" : "green"}>{row.risk}</Pill></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Surface>
+  );
+}
+
+function DesktopUpdateTable({ mode }) {
+  const showEnglish = mode === "both";
+  return (
+    <Surface className="hidden overflow-hidden md:block">
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-left text-sm">
+          <thead style={{ background: theme.warm }}>
+            <tr>
+              <th className="px-4 py-4 font-semibold md:px-6">{mode === "en" ? "Item" : "項目"}</th>
+              <th className="px-4 py-4 font-semibold md:px-6">Result</th>
+              <th className="px-4 py-4 font-semibold md:px-6">{mode === "en" ? "Primary note" : "中文說明"}</th>
+              {showEnglish && <th className="px-4 py-4 font-semibold md:px-6">English note</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {updateMatrix.map((row, i) => (
+              <tr key={row.label} className={i % 2 === 0 ? "" : "bg-[#FFFEFB]"} style={{ borderTop: `1px solid ${theme.line}` }}>
+                <td className="px-4 py-4 align-top font-medium md:px-6">{mode === "en" ? row.labelEn : row.label}</td>
+                <td className="px-4 py-4 align-top md:px-6"><Pill tone={row.result === "update" ? "green" : "red"}>{row.result === "update" ? "Update" : "Reapply"}</Pill></td>
+                <td className="px-4 py-4 align-top leading-7 md:px-6">{mode === "en" ? row.en : row.zh}</td>
+                {showEnglish && <td className="px-4 py-4 align-top leading-7 text-[#5E564F] md:px-6">{row.en}</td>}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Surface>
+  );
+}
+
+export default function ESTAInfrastructure() {
+  const [mode, setMode] = useState("both");
+  const [compact, setCompact] = useState(false);
+  const [openFaq, setOpenFaq] = useState("q1");
+
+  return (
+    <div className="min-h-screen" style={{ background: theme.bg, color: theme.ink }}>
+      <div className="sticky top-0 z-20 border-b backdrop-blur" style={{ background: "rgba(252,250,242,0.92)", borderColor: theme.line }}>
+        <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-3 md:px-6">
+          {sections.map((s) => (
+            <a key={s.id} href={`#${s.id}`} className="inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-sm transition hover:-translate-y-[1px]" style={{ borderColor: theme.line, color: theme.ink, background: theme.card }}>
+              <span>{s.zh}</span>
+              <span className="hidden opacity-40 sm:inline">/</span>
+              <span className="hidden sm:inline">{s.en}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <ReadingSettings mode={mode} setMode={setMode} compact={compact} setCompact={setCompact} />
+
+      <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 pb-24 md:px-6 md:py-8 md:pb-28">
+        <Surface className="overflow-hidden">
+          <div className="grid gap-6 p-5 md:grid-cols-[1.18fr_0.82fr] md:p-8">
+            <div>
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <Pill tone="green">{mode === "en" ? "Tourism" : "觀光"}</Pill>
+                <Pill>{mode === "en" ? "Business" : "商務"}</Pill>
+                <Pill tone="amber">{mode === "en" ? "Transit" : "過境"}</Pill>
+                <Pill>{mode === "en" ? "Up to 90 days" : "最長 90 天"}</Pill>
+              </div>
+              <h1 className="text-3xl font-semibold leading-tight md:text-5xl" style={{ color: theme.ink }}>
+                中華民國護照 ESTA 申請完整指引
+              </h1>
+              {mode !== "zh" && <p className="mt-3 text-lg md:text-xl" style={{ color: theme.deep }}>ESTA Guide for ROC Passport Holders</p>}
+              <div className="mt-5 flex flex-wrap gap-3">
+                <a href="https://esta.cbp.dhs.gov/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-white" style={{ background: theme.deep }}>
+                  {mode === "en" ? "Official ESTA" : "官方網站"}
+                </a>
+                <a href="https://esta.cbp.dhs.gov/faq?lang=zh" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold" style={{ borderColor: theme.line, color: theme.ink, background: theme.card }}>
+                  {mode === "en" ? "Chinese FAQ" : "中文 FAQ"}
+                </a>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
+              {quickFacts.map((item) => (
+                <Surface key={item.zhLabel} className="p-4" style={{ background: cardTone(item.tone).bg }}>
+                  <Bilingual mode={mode} className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7A6E64]" zh={item.zhLabel} en={item.enLabel} />
+                  <Bilingual mode={mode} className="mt-2 text-base font-semibold leading-7 text-[#2C2926]" zh={item.zhValue} en={item.enValue} />
+                </Surface>
+              ))}
+            </div>
+          </div>
+        </Surface>
+
+        <section id="overview" className="scroll-mt-28">
+          <SectionTitle mode={mode} kickerZh="總覽" kickerEn="Overview" titleZh="先抓住四句話" titleEn="Four Lines to Anchor the Whole Process" />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {keyCards.map((card) => (
+              <Surface key={card.zhTitle} className="p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <Pill tone={card.tone}>{mode === "en" ? card.enTitle : card.zhTitle}</Pill>
+                </div>
+                <Bilingual mode={mode} className="mt-4" zh={<><h3 className="text-lg font-semibold">{card.zhTitle}</h3><p className="mt-2 text-sm leading-7 text-[#5E564F]">{card.zh}</p></>} en={<><h3 className="text-lg font-semibold">{card.enTitle}</h3><p className="mt-2 text-sm leading-7 text-[#5E564F]">{card.en}</p></>} />
+              </Surface>
+            ))}
+          </div>
+        </section>
+
+        <section id="eligibility" className="scroll-mt-28">
+          <SectionTitle mode={mode} kickerZh="適用判斷" kickerEn="Eligibility" titleZh="適用判斷與限制條件" titleEn="Eligibility and Restriction Logic" />
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+            <Surface className="p-5 md:p-6">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="rounded-[20px] p-4" style={{ background: theme.softGreen }}>
+                  <p className="text-sm font-semibold" style={{ color: theme.green }}>{mode === "en" ? "Use ESTA" : "可用 ESTA"}</p>
+                  <p className="mt-2 text-sm leading-7">{mode === "en" ? "Tourism, business, or transit, with each stay capped at 90 days." : "觀光、商務、過境，且單次停留不超過 90 天。"}</p>
+                </div>
+                <div className="rounded-[20px] p-4" style={{ background: theme.softRed }}>
+                  <p className="text-sm font-semibold" style={{ color: theme.red }}>{mode === "en" ? "Use a Visa" : "改走簽證"}</p>
+                  <p className="mt-2 text-sm leading-7">{mode === "en" ? "Work, for-credit study, long stays, immigration, or other purposes outside the VWP." : "工作、正式讀書、長期停留、移民，或其他超出 VWP 的目的。"}</p>
+                </div>
+                <div className="rounded-[20px] p-4" style={{ background: theme.softAmber }}>
+                  <p className="text-sm font-semibold" style={{ color: theme.amber }}>{mode === "en" ? "Re-check eligibility" : "先重看資格"}</p>
+                  <p className="mt-2 text-sm leading-7">{mode === "en" ? "If you have restricted travel history, dual nationality, or prior refusal issues." : "有特定旅行史、停留史、雙重國籍、或拒簽紀錄時。"}</p>
+                </div>
+              </div>
+              <div className="mt-5 space-y-3">
+                {restrictions.map((item, idx) => (
+                  <div key={idx} className="rounded-[18px] border p-4" style={{ borderColor: theme.line }}>
+                    <Bilingual mode={mode} className="text-sm leading-7" zh={item.zh} en={item.en} />
+                  </div>
+                ))}
+              </div>
+            </Surface>
+            <Surface className="p-5 md:p-6">
+              <div className="space-y-3">
+                {[
+                  { qZh: "你是不是持有中華民國電子護照？", qEn: "Do you hold an ROC e-passport?", yesZh: "繼續", yesEn: "Continue", noZh: "先改看簽證或護照條件", noEn: "Check visa or passport rules first" },
+                  { qZh: "目的是否為觀光、商務、過境？", qEn: "Is the purpose tourism, business, or transit?", yesZh: "繼續", yesEn: "Continue", noZh: "ESTA 不適合", noEn: "ESTA is not the right path" },
+                  { qZh: "單次停留是否不超過 90 天？", qEn: "Will each stay be 90 days or less?", yesZh: "繼續", yesEn: "Continue", noZh: "改申請簽證", noEn: "Apply for a visa" },
+                  { qZh: "是否有特定旅行史、古巴停留史、或特定雙重國籍？", qEn: "Do you have restricted travel history, Cuba presence, or restricted dual nationality?", yesZh: "高度可能要簽證", yesEn: "A visa is likely needed", noZh: "通常可走 ESTA", noEn: "ESTA is usually available" },
+                ].map((node, i) => (
+                  <div key={node.qZh} className="rounded-[22px] border p-4" style={{ borderColor: theme.line }}>
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white" style={{ background: theme.deep }}>{i + 1}</div>
+                      <div>
+                        <p className="font-medium">{mode === "en" ? node.qEn : node.qZh}</p>
+                        <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                          <Pill tone="green">{mode === "en" ? `Yes → ${node.yesEn}` : `是 → ${node.yesZh}`}</Pill>
+                          <Pill tone="red">{mode === "en" ? `No → ${node.noEn}` : `否 → ${node.noZh}`}</Pill>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+          </div>
+        </section>
+
+        <section id="prepare" className="scroll-mt-28">
+          <SectionTitle mode={mode} kickerZh="申請前準備" kickerEn="Before You Start" titleZh="申請前先備好這些東西" titleEn="Prepare These Before You Start" />
+          <div className="grid gap-4 lg:grid-cols-[1fr_0.88fr]">
+            <Surface className="p-5 md:p-6">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {prepItems.map((item) => (
+                  <div key={item.zh} className="rounded-[20px] border p-4" style={{ borderColor: theme.line }}>
+                    <Bilingual mode={mode} className="text-sm leading-7" zh={item.zh} en={item.en} />
+                  </div>
+                ))}
+              </div>
+            </Surface>
+            <div className="space-y-4">
+              <Surface className="p-5" style={{ background: theme.warm }}>
+                <Bilingual mode={mode} zh={<><p className="font-semibold">自拍照這一題要怎麼理解才準</p><p className="mt-2 text-sm leading-7">官方目前把旅客自拍列為 If Applicable。比較穩的寫法不是「現在所有人一律強制自拍」，而是「系統可能要求影像驗證，所以建議事先準備好近期、清楚、正面、未修圖的人像照」。</p></>} en={<><p className="font-semibold">How to read the selfie requirement correctly</p><p className="mt-2 text-sm leading-7">The official site currently labels the traveler selfie as If Applicable. The safer reading is that image verification may appear in some flows, so a recent, clear, front-facing, unedited photo should be prepared in advance.</p></>} />
+              </Surface>
+              <Surface className="p-5">
+                <Bilingual mode={mode} zh={<><p className="font-semibold">官方 App 與網站怎麼分工</p><p className="mt-2 text-sm leading-7">官方 App 目前主打新個人申請與查既有申請。若你要同時辦多位家人，網站的 Group of Applications 更完整也更直覺。</p></>} en={<><p className="font-semibold">App versus website</p><p className="mt-2 text-sm leading-7">The official app currently focuses on new individual applications and existing-application lookup. If you are filing for multiple family members, the website is more complete and more intuitive because it clearly supports group applications.</p></>} />
+              </Surface>
+              <Surface className="p-5">
+                <Bilingual mode={mode} zh={<><p className="font-semibold">對臺灣旅客最特殊的一格</p><p className="mt-2 text-sm leading-7">官方 FAQ 明確指出，臺灣護照持有人必須提供 Passport Number 與 Personal Identification Number。實務上，PIN 對一般中華民國護照持有人就是國民身分證統一編號。</p></>} en={<><p className="font-semibold">The most Taiwan-specific field</p><p className="mt-2 text-sm leading-7">The official FAQ explicitly states that Taiwan passport holders must provide both the Passport Number and the Personal Identification Number. In practice, for most ROC passport holders, the PIN is the National ID number.</p></>} />
+              </Surface>
+            </div>
+          </div>
+        </section>
+
+        <section id="flow" className="scroll-mt-28">
+          <SectionTitle mode={mode} kickerZh="流程圖" kickerEn="Flow" titleZh="實際流程圖" titleEn="Practical Application Flow" />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {screenFlow.map((item) => (
+              <Surface key={item.step} className="p-5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-semibold text-white" style={{ background: theme.deep }}>{item.step}</div>
+                <Bilingual mode={mode} className="mt-4" zh={<><h3 className="font-semibold">{item.zh}</h3><p className="mt-2 text-sm leading-7 text-[#5E564F]">{item.noteZh}</p></>} en={<><h3 className="font-semibold">{item.en}</h3><p className="mt-2 text-sm leading-7 text-[#5E564F]">{item.noteEn}</p></>} />
+              </Surface>
+            ))}
+          </div>
+        </section>
+
+        <section id="fields" className="scroll-mt-28">
+          <SectionTitle mode={mode} kickerZh="逐欄對照" kickerEn="Field Guide" titleZh="逐欄對照版" titleEn="Field-by-Field Guidance" />
+          <MobileInfoCards mode={mode} rows={fieldGuide} type="field" />
+          <DesktopFieldTable mode={mode} compact={compact} />
+        </section>
+
+        <section id="status" className="scroll-mt-28">
+          <SectionTitle mode={mode} kickerZh="結果與後續" kickerEn="Status" titleZh="查結果與送出後處理" titleEn="Checking Status and Handling the Result" />
+          <div className="grid gap-4 lg:grid-cols-3">
+            {statusCards.map((card) => (
+              <Surface key={card.code} className="p-5" style={{ background: cardTone(card.tone).bg }}>
+                <p className="text-sm font-semibold" style={{ color: cardTone(card.tone).text }}>{card.code}</p>
+                <Bilingual mode={mode} className="mt-3 text-sm leading-7" zh={card.zh} en={card.en} />
+              </Surface>
+            ))}
+          </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <Surface className="p-5">
+              <Bilingual mode={mode} zh={<><p className="font-semibold">官方查詢路徑</p><p className="mt-2 text-sm leading-7">Check ESTA Status → Check Individual Status。通常會用到護照號碼、出生日期、申請編號。</p></>} en={<><p className="font-semibold">Official lookup path</p><p className="mt-2 text-sm leading-7">Check ESTA Status → Check Individual Status. You will usually need the passport number, birth date, and application number.</p></>} />
+            </Surface>
+            <Surface className="p-5">
+              <Bilingual mode={mode} zh={<><p className="font-semibold">關鍵時程</p><p className="mt-2 text-sm leading-7">建議訂旅程時就申請。官方建議最晚不晚於登機前 72 小時。Pending 通常 72 小時內更新。</p></>} en={<><p className="font-semibold">Timing that matters</p><p className="mt-2 text-sm leading-7">Apply when the trip is booked. Official guidance says no later than 72 hours before boarding. Pending cases usually update within 72 hours.</p></>} />
+            </Surface>
+          </div>
+        </section>
+
+        <section id="update" className="scroll-mt-28">
+          <SectionTitle mode={mode} kickerZh="更新或重辦" kickerEn="Update" titleZh="哪些可以更新，哪些通常要重辦" titleEn="What You Can Update and What Usually Requires Reapplication" />
+          <MobileInfoCards mode={mode} rows={updateMatrix} type="update" />
+          <DesktopUpdateTable mode={mode} />
+        </section>
+
+        <section id="mistakes" className="scroll-mt-28">
+          <SectionTitle mode={mode} kickerZh="常見錯誤" kickerEn="Mistakes" titleZh="最容易出錯的地方" titleEn="The Mistakes That Cause the Most Trouble" />
+          <div className="grid gap-4 lg:grid-cols-[1fr_0.88fr]">
+            <Surface className="p-5 md:p-6">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {mistakeList.map(([zh, en], idx) => (
+                  <div key={zh} className="rounded-[20px] border p-4" style={{ borderColor: theme.line }}>
+                    <div className="mb-2 inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-white" style={{ background: theme.red }}>{idx + 1}</div>
+                    <Bilingual mode={mode} className="text-sm leading-7" zh={zh} en={en} />
+                  </div>
+                ))}
+              </div>
+            </Surface>
+            <div className="space-y-4">
+              <Surface className="p-5" style={{ background: theme.softAmber }}>
+                <Bilingual mode={mode} zh={<><p className="font-semibold">最實用的結論</p><p className="mt-2 text-sm leading-7">送出前最值得花時間的，不是多看一次首頁，而是逐格重查核心資料。若核心資料錯了，後面通常不是修改一下就好，而是整份要重辦。</p></>} en={<><p className="font-semibold">Most practical bottom line</p><p className="mt-2 text-sm leading-7">The best use of your time before submission is re-checking the core identity fields one by one. If those fields are wrong, the next step is often a fresh application.</p></>} />
+              </Surface>
+              <Surface className="p-5" style={{ background: theme.softRed }}>
+                <Bilingual mode={mode} zh={<><p className="font-semibold">被拒後不要誤判</p><p className="mt-2 text-sm leading-7">若 ESTA 已被拒，而你的情況沒有改變，官方指引明確指出再送通常也會被拒。這種情況下，改評估簽證才是正路。</p></>} en={<><p className="font-semibold">Do not misread a denial</p><p className="mt-2 text-sm leading-7">If ESTA has already been denied and nothing in your circumstances has changed, official guidance says a new application will usually also be denied. At that point, the visa route is the realistic path forward.</p></>} />
+              </Surface>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <SectionTitle mode={mode} kickerZh="補充" kickerEn="FAQ" titleZh="常見問題" titleEn="Frequently Asked Questions" />
+          <div className="space-y-3">
+            {faqs.map((faq) => {
+              const isOpen = openFaq === faq.id;
+              return (
+                <Surface key={faq.id} className="overflow-hidden">
+                  <button type="button" onClick={() => setOpenFaq(isOpen ? "" : faq.id)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left md:px-6">
+                    <Bilingual mode={mode} zh={<p className="font-semibold">{faq.qZh}</p>} en={<p className="font-semibold">{faq.qEn}</p>} />
+                    <div className="shrink-0 rounded-full border px-2 py-1 text-sm" style={{ borderColor: theme.line }}>{isOpen ? "−" : "+"}</div>
+                  </button>
+                  {isOpen && (
+                    <div className="border-t px-5 py-4 md:px-6" style={{ borderColor: theme.line }}>
+                      <Bilingual mode={mode} zh={<p className="text-sm leading-7">{faq.aZh}</p>} en={<p className="text-sm leading-7">{faq.aEn}</p>} />
+                    </div>
+                  )}
+                </Surface>
+              );
+            })}
+          </div>
+        </section>
+
+        <section id="links" className="scroll-mt-28">
+          <SectionTitle mode={mode} kickerZh="官方連結" kickerEn="Links" titleZh="官方連結與非標準情境提醒" titleEn="Official Links and Special-Case Notes" />
+          <div className="grid gap-4 lg:grid-cols-[1fr_0.88fr]">
+            <div className="grid gap-4 md:grid-cols-2">
+              {links.map((item) => (
+                <Surface key={item.url} className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-semibold leading-7">{item.title}</p>
+                    <a href={item.url} target="_blank" rel="noreferrer" className="text-sm font-semibold underline underline-offset-4" style={{ color: theme.deep }}>
+                      Open
+                    </a>
+                  </div>
+                  <Bilingual mode={mode} className="mt-2 text-sm leading-7 text-[#5E564F]" zh={item.noteZh} en={item.noteEn} />
+                </Surface>
+              ))}
+            </div>
+            <div className="space-y-4">
+              <Surface className="p-5" style={{ background: theme.warm }}>
+                <Bilingual mode={mode} zh={<><p className="font-semibold">這份頁面適用於誰</p><p className="mt-2 text-sm leading-7">聚焦一般中華民國護照持有人走標準 ESTA 流程的高頻情境。畫面順序可能因網站、App、語言版本略有差異。遇到差異時，以當下官方頁面為準。</p></>} en={<><p className="font-semibold">Who this page is for</p><p className="mt-2 text-sm leading-7">This page is built for the standard, high-frequency ESTA path used by most ROC passport holders. Screen order can vary slightly across the website, app, and language version. Follow the live official screen if it differs.</p></>} />
+              </Surface>
+              <Surface className="p-5">
+                <Bilingual mode={mode} zh={<><p className="font-semibold">非標準情境要特別小心</p><p className="mt-2 text-sm leading-7">若你有拒簽史、雙重國籍、特殊身分、私人飛機承運、或其他非標準情境，請直接回到官方頁面或改走簽證判斷。若你換了新護照、姓名或國籍有變動，也不要把舊 ESTA 當成可直接沿用。</p></>} en={<><p className="font-semibold">Special cases that need extra caution</p><p className="mt-2 text-sm leading-7">If you have prior refusals, dual nationality, special status issues, private aircraft travel, or any non-standard profile, go back to the official source or evaluate the visa route directly. If you received a new passport or changed your name or citizenship, do not assume the old ESTA can simply continue to be used.</p></>} />
+              </Surface>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
