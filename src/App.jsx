@@ -1207,12 +1207,12 @@ export default function ESTAInfrastructureRebuiltV2() {
   }, [riskFilter]);
 
   const heroIntro = mode === "en"
-    ? "A cleaner, cross-device ESTA page for the standard path most ROC passport holders actually use."
-    : "把最常用的 ESTA 路徑整理成可直接讀、直接查、直接對照的版本。";
+    ? "Standard path most ROC passport holders actually use to apply ESTA."
+    : "最常用的 ESTA 路徑";
 
   const heroSub = mode === "en"
-    ? "It keeps the official logic, removes presentation noise, and makes the risky fields easier to spot."
-    : "保留官方邏輯，拿掉讀者不需要的說明，把真正容易出錯的欄位與限制先翻到前面。";
+    ? "official logic"
+    : "官方邏輯";
 
   const riskHighlightTitle = mode === "en" ? "Field risk board" : "欄位風險板";
   const filteredCountText = mode === "en"
@@ -1363,8 +1363,8 @@ export default function ESTAInfrastructureRebuiltV2() {
             kickerEn="Start Here"
             titleZh="先看這四步，方向通常就不會錯"
             titleEn="These four checks usually set the route correctly"
-            noteZh="一般讀者最先需要的是方向，不是滿頁法條。"
-            noteEn="Most readers need the route first, not a wall of legal detail."
+            noteZh="方向"
+            noteEn="the route"
           />
           <div className="grid gap-4 lg:grid-cols-[0.96fr_1.04fr]">
             <Surface className="p-5 md:p-6">
@@ -1449,8 +1449,8 @@ export default function ESTAInfrastructureRebuiltV2() {
             kickerEn="Eligibility"
             titleZh="限制條件要寫得精準，不要只寫模糊印象"
             titleEn="Restriction logic should be precise, not impressionistic"
-            noteZh="這一區是最容易被網路文章寫錯、寫過頭、或寫太省略的地方。"
-            noteEn="This is the section most likely to be misstated, overstated, or oversimplified online."
+            noteZh="-"
+            noteEn="-"
           />
           <div className="grid gap-4 lg:grid-cols-[0.98fr_1.02fr]">
             <Surface className="p-5 md:p-6">
@@ -1515,8 +1515,8 @@ export default function ESTAInfrastructureRebuiltV2() {
             kickerEn="Prepare"
             titleZh="先把資料備齊，再進官方頁面"
             titleEn="Gather the data first, then open the official page"
-            noteZh="這樣做的好處很直接，填寫速度更穩，欄位錯誤也會少很多。"
-            noteEn="The benefit is simple, smoother filing and fewer avoidable field errors."
+            noteZh="填寫速度更穩，欄位錯誤少很多。"
+            noteEn="Smoother filing and fewer avoidable field errors."
           />
           <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
             <div className="space-y-4">
@@ -1559,10 +1559,10 @@ export default function ESTAInfrastructureRebuiltV2() {
             mode={mode}
             kickerZh="流程圖"
             kickerEn="Flow"
-            titleZh="實際操作順序，用一般人真的會遇到的步驟來排"
-            titleEn="Practical flow, ordered the way most people actually encounter it"
-            noteZh="這不是法條編號順序，而是使用者操作順序。"
-            noteEn="This is not legal-order sequencing. It is reader-order sequencing."
+            titleZh="實際操作順序"
+            titleEn="Practical flow"
+            noteZh="-"
+            noteEn="-"
           />
           <div className="grid gap-3 md:gap-0">
             {flowSteps.map((item, index) => (
